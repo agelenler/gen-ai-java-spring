@@ -1,0 +1,46 @@
+server:
+  port: 8081
+
+app:
+  ai:
+    provider: openai # or openai
+
+spring:
+  application:
+    name: gen-ai-java-spring
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY} # dummy-string # ${HUGGINGFACE_API_KEY} #
+#      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
+      chat:
+        options:
+          model: gpt-4o # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+    vertex:
+      ai:
+        gemini:
+          project-id: robotic-haven-471920-m0
+          location: us-central1
+          chat:
+            options:
+              model: gemini-2.0-flash
+    huggingface:
+      chat:
+        api-key: ${HUGGINGFACE_API_KEY}
+        url: https://g6njgidlsy6hcszr.us-east-1.aws.endpoints.huggingface.cloud
+        options:
+          model: Qwen/Qwen2.5-Coder-7B-Instruct
+          max-new-tokens: 1024
+          temperature: 0.7
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: custom-mistral-model:latest
+          max-new-tokens: 512
+          temperature: 0.7
+
+logging:
+  level:
+    root: INFO
+    com.genai.java.spring: INFO
+    org.springframework.ai: INFO
