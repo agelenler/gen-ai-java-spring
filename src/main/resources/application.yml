@@ -44,3 +44,4 @@ logging:
     root: INFO
     com.genai.java.spring: INFO
     org.springframework.ai: INFO
+    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG
