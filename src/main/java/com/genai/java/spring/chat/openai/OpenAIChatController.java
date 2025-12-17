@@ -23,9 +23,9 @@ public class OpenAIChatController {
 
     private final static String SYSTEM_PROMPT = "You are a helpful assistant that summarize any given content. " +
             "Ensure the summary is concise, informative, and captures the key points. " +
-            "Use a friendly and approachable tone while maintaining professionalism." +
-            "Do not answer anything other than the summarization. If the question is not about summarization," +
-            "respond with 'I can only help with summarization tasks.'";
+            "Use a friendly and approachable tone while maintaining professionalism.";
+//            "Do not answer anything other than the summarization. If the question is not about summarization," +
+//            "respond with 'I can only help with summarization tasks.'";
 
     private final ChatClient chatClient;
     private final OpenAIService openAIService;
