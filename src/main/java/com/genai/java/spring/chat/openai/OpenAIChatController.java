@@ -4,6 +4,9 @@ import com.genai.java.spring.chat.openai.dto.response.SummarizationResponse;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.ollama.api.OllamaChatOptions;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatOptions;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -24,8 +27,6 @@ public class OpenAIChatController {
     private final static String SYSTEM_PROMPT = "You are a helpful assistant that summarize any given content. " +
             "Ensure the summary is concise, informative, and captures the key points. " +
             "Use a friendly and approachable tone while maintaining professionalism.";
-//            "Do not answer anything other than the summarization. If the question is not about summarization," +
-//            "respond with 'I can only help with summarization tasks.'";
 
     private final ChatClient chatClient;
     private final OpenAIService openAIService;
@@ -67,7 +68,6 @@ public class OpenAIChatController {
 
     @PostMapping("/summarize-meeting-notes-structured")
     public SummarizationResponse summarizeMeetingNotesStructuredOutput(@RequestBody String meetingNotes) {
-        try {
             return chatClient.prompt()
                     .system(SYSTEM_PROMPT)
                     .user(u -> u.text("Can you summarize the following meeting notes: {meetingNotes}" +
@@ -85,14 +85,10 @@ public class OpenAIChatController {
                             .param("meetingNotes", meetingNotes))
                     .call()
                     .entity(SummarizationResponse.class);
-        } catch (Exception e) {
-            return new SummarizationResponse(null, null, e.getMessage());
-        }
     }
 
     @PostMapping("/summarize-meeting-notes-structured-list")
     public List<SummarizationResponse> summarizeMeetingNotesStructuredOutputList(@RequestBody String meetingNotes) {
-        try {
             return chatClient.prompt()
                     .system(SYSTEM_PROMPT)
                     .user(u -> u.text("Can you summarize the following meeting notes: {meetingNotes}" +
@@ -112,9 +108,6 @@ public class OpenAIChatController {
                     .call()
                     .entity(new ParameterizedTypeReference<>() {
                     });
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
     }
 
     @PostMapping(value = "/summarize-with-streaming", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

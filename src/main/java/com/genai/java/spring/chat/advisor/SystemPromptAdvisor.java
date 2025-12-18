@@ -33,7 +33,7 @@ public class SystemPromptAdvisor implements CallAdvisor, StreamAdvisor {
 
     @Override
     public String getName() {
-        return "CustomSystemPromptAdvisor";
+        return "SystemPromptAdvisor";
     }
 
     @Override
@@ -48,14 +48,16 @@ public class SystemPromptAdvisor implements CallAdvisor, StreamAdvisor {
                 " Do not answer anything other than the summarization." +
                 " If the question is not about summarization, " +
                 " respond with 'I can only help with summarization tasks." +
-                " Never provide any other information." + existingSystemMessage.getText()));
+                " Never provide any other information. " + existingSystemMessage));
 
-        chatClientRequest = chatClientRequest.mutate().prompt(Prompt
-                .builder()
+        chatClientRequest = chatClientRequest.mutate().prompt(Prompt.builder()
                 .messages(existingMessages)
                 .build()).build();
+
         String systemMessage = chatClientRequest.prompt().getSystemMessage().getText();
         log.info("System Message is updated as: {}", systemMessage);
         return chatClientRequest;
+
     }
+
 }

@@ -18,7 +18,6 @@ import java.util.List;
 @Configuration
 public class AIProviderConfig {
 
-
     @Bean("openAIChatClient")
     ChatClient openAIChatClient(OpenAiChatModel openAiChatModel,
                                 SimpleLoggerAdvisor simpleLoggerAdvisor,
@@ -27,7 +26,7 @@ public class AIProviderConfig {
                                 SystemPromptAdvisor systemPromptAdvisor,
                                 ValidationAdvisor validationAdvisor) {
         return ChatClient.builder(openAiChatModel)
-                .defaultAdvisors(safeGuardAdvisor, simpleLoggerAdvisor, errorWrappingAdvisor, systemPromptAdvisor)
+                .defaultAdvisors(errorWrappingAdvisor, safeGuardAdvisor, simpleLoggerAdvisor, systemPromptAdvisor, validationAdvisor)
                 .build();
     }
 
@@ -60,6 +59,5 @@ public class AIProviderConfig {
                 "system prompt", "hack"
         ));
     }
-
 
 }

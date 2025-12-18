@@ -1,5 +1,6 @@
 package com.genai.java.spring.chat.advisor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.api.CallAdvisor;
@@ -10,10 +11,10 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+@Slf4j
 @Component
 public class ValidationAdvisor implements CallAdvisor, StreamAdvisor {
-
-    private static final int MAX_TOKENS_INPUT = 10;
+    private static final int MAX_TOKENS_INPUT = 5000;
 
     @Override
     public ChatClientResponse adviseCall(ChatClientRequest chatClientRequest, CallAdvisorChain callAdvisorChain) {
@@ -23,7 +24,29 @@ public class ValidationAdvisor implements CallAdvisor, StreamAdvisor {
         return chatClientResponse;
     }
 
-    private static void validateOutput(ChatClientResponse chatClientResponse) {
+    @Override
+    public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest, StreamAdvisorChain streamAdvisorChain) {
+        return streamAdvisorChain.nextStream(chatClientRequest);
+    }
+
+    @Override
+    public String getName() {
+        return "ValidationAdvisor";
+    }
+
+    @Override
+    public int getOrder() {
+        return 0;
+    }
+
+    private void validateInput(ChatClientRequest chatClientRequest) {
+        String input = chatClientRequest.prompt().getContents();
+        if (input.length() > MAX_TOKENS_INPUT) {
+            throw new IllegalArgumentException("Prompt too long: exceeds " + MAX_TOKENS_INPUT + " characters!");
+        }
+    }
+
+    private void validateOutput(ChatClientResponse chatClientResponse) {
         ChatResponse chatResponse = chatClientResponse.chatResponse();
 
         if (chatResponse == null) {
@@ -32,34 +55,8 @@ public class ValidationAdvisor implements CallAdvisor, StreamAdvisor {
 
         String output = chatResponse.getResult().getOutput().getText();
 
-        // Ensure non-empty response
         if (output == null || output.trim().isEmpty()) {
             throw new IllegalArgumentException("LLM returned an empty response!");
         }
-    }
-
-    private static void validateInput(ChatClientRequest chatClientRequest) {
-        String input = chatClientRequest.prompt().getContents();
-        // Length validation
-        if (input.length() > MAX_TOKENS_INPUT) {
-            //or return a failure response as in the safeguardadvisor
-            throw new IllegalArgumentException("Prompt too long: exceeds " + MAX_TOKENS_INPUT + " characters!");
-        }
-    }
-
-    @Override
-    public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest, StreamAdvisorChain streamAdvisorChain) {
-        validateInput(chatClientRequest);
-        return streamAdvisorChain.nextStream(chatClientRequest);
-    }
-
-    @Override
-    public String getName() {
-        return "CustomValidationAdvisor";
-    }
-
-    @Override
-    public int getOrder() {
-        return 0;
     }
 }

@@ -2,6 +2,9 @@ package com.genai.java.spring.chat.googlevertexai;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatOptions;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
