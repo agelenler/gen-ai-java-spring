@@ -11,16 +11,12 @@ import org.springframework.ai.chat.client.advisor.api.CallAdvisorChain;
 import org.springframework.ai.chat.client.advisor.api.StreamAdvisor;
 import org.springframework.ai.chat.client.advisor.api.StreamAdvisorChain;
 import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -36,43 +32,41 @@ public class ErrorWrappingAdvisor implements CallAdvisor, StreamAdvisor {
 
     @Override
     public ChatClientResponse adviseCall(ChatClientRequest chatClientRequest, CallAdvisorChain callAdvisorChain) {
-        log.info("Request received in ErrorWrappingAdvisor with prompt: {}", chatClientRequest.prompt().getUserMessage().getText());
+        log.info("Request received in ErrorWrappingAdvisor with prompt: {}",
+                chatClientRequest.prompt().getUserMessage().getText());
+
         ChatClientResponse chatClientResponse = callAdvisorChain.nextCall(chatClientRequest);
 
         String assistantMessage = chatClientResponse.chatResponse().getResult().getOutput().getText().trim();
 
-        if (!assistantMessage.startsWith("```json") && !assistantMessage.startsWith("{")) {
-            SummarizationResponse dto = new SummarizationResponse(null, null, assistantMessage);
+        if (!assistantMessage.startsWith("```json") && !assistantMessage.startsWith("{") && !assistantMessage.startsWith("[\n  {")) {
+            SummarizationResponse summarizationResponse = new SummarizationResponse(null, null, assistantMessage);
             try {
                 chatClientResponse = chatClientResponse.mutate()
                         .chatResponse(ChatResponse.builder()
-                                .generations(List.of(new Generation(new AssistantMessage(objectMapper.writeValueAsString(dto)))))
+                                .generations(List.of(new Generation(new AssistantMessage(objectMapper.writeValueAsString(summarizationResponse)))))
                                 .build())
                         .context(Map.copyOf(chatClientRequest.context()))
                         .build();
-
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         }
-
         return chatClientResponse;
     }
 
     @Override
     public Flux<ChatClientResponse> adviseStream(ChatClientRequest chatClientRequest, StreamAdvisorChain streamAdvisorChain) {
-        Flux<ChatClientResponse> chatClientResponse = streamAdvisorChain.nextStream(chatClientRequest);
-
-        return chatClientResponse;
+        return streamAdvisorChain.nextStream(chatClientRequest);
     }
 
     @Override
     public String getName() {
-        return "CustomErrorWrappingAdvisor";
+        return "ErrorWrappingAdvisor";
     }
 
     @Override
     public int getOrder() {
-        return Ordered.LOWEST_PRECEDENCE - 1;
+        return Ordered.HIGHEST_PRECEDENCE;
     }
 }
