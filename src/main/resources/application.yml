@@ -14,7 +14,7 @@ spring:
 #      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
       chat:
         options:
-          model: gpt-4o # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+          model: gpt-3.5-turbo # gpt-4o # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
     vertex:
       ai:
         gemini:

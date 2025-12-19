@@ -33,6 +33,7 @@ public class DockerModelRunnerController {
                 .model("ai/qwen3-vl")
                 .maxTokens(500) // output token
                 .temperature(2.0)
+                .topP(0.1)
                 .build();
         return chatClient.prompt()
                 .options(chatOptions)

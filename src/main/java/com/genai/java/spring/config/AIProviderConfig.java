@@ -30,6 +30,11 @@ public class AIProviderConfig {
                 .build();
     }
 
+    @Bean("openAIGeneralChatClient")
+    ChatClient openAIGeneralChatClient(OpenAiChatModel openAiChatModel) {
+        return ChatClient.builder(openAiChatModel).build();
+    }
+
     @Bean("vertexAIChatClient")
     ChatClient vertexAIChatClient(VertexAiGeminiChatModel vertexAiGeminiChatModel) {
         return ChatClient.builder(vertexAiGeminiChatModel).build();
