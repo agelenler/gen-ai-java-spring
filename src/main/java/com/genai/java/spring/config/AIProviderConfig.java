@@ -3,6 +3,7 @@ package com.genai.java.spring.config;
 import com.genai.java.spring.chat.advisor.ErrorWrappingAdvisor;
 import com.genai.java.spring.chat.advisor.SystemPromptAdvisor;
 import com.genai.java.spring.chat.advisor.ValidationAdvisor;
+import com.genai.java.spring.chat.openai.jailbreak.demo.BankingTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SafeGuardAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -31,8 +32,10 @@ public class AIProviderConfig {
     }
 
     @Bean("openAIGeneralChatClient")
-    ChatClient openAIGeneralChatClient(OpenAiChatModel openAiChatModel) {
-        return ChatClient.builder(openAiChatModel).build();
+    ChatClient openAIGeneralChatClient(OpenAiChatModel openAiChatModel, SystemPromptAdvisor systemPromptAdvisor) {
+        return ChatClient.builder(openAiChatModel)
+                .defaultAdvisors(systemPromptAdvisor)
+                .build();
     }
 
     @Bean("vertexAIChatClient")
@@ -61,8 +64,7 @@ public class AIProviderConfig {
                 "password", "ssn", "credit card", "iban", "bank account",
                 "api_key", "secret", "private_key", "token",
                 "confidential", "classified", "internal only", "Ignore previous instructions",
-                "system prompt", "hack"
-        ));
+                "Ignore instructions", "system prompt", "hack"));
     }
 
 }
