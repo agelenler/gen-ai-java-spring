@@ -14,11 +14,11 @@ spring:
 #      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
       chat:
         options:
-          model: gpt-3.5-turbo # gpt-4o # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+          model: gpt-4o # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
     vertex:
       ai:
         gemini:
-          project-id: robotic-haven-471920-m0
+          project-id: project-a82217dd-7228-46da-a70
           location: us-central1
           chat:
             options:
@@ -35,7 +35,7 @@ spring:
       base-url: http://localhost:11434
       chat:
         options:
-          model: custom-mistral-model:latest
+          model: mistral:7b # custom-mistral-model:latest
           max-new-tokens: 512
           temperature: 0.7
 

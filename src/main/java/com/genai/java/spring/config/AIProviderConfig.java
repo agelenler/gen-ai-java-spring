@@ -32,10 +32,8 @@ public class AIProviderConfig {
     }
 
     @Bean("openAIGeneralChatClient")
-    ChatClient openAIGeneralChatClient(OpenAiChatModel openAiChatModel, SystemPromptAdvisor systemPromptAdvisor) {
-        return ChatClient.builder(openAiChatModel)
-                .defaultAdvisors(systemPromptAdvisor)
-                .build();
+    ChatClient openAIGeneralChatClient(OpenAiChatModel openAiChatModel) {
+        return ChatClient.builder(openAiChatModel).build();
     }
 
     @Bean("vertexAIChatClient")
