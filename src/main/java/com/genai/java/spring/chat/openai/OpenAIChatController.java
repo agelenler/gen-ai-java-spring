@@ -34,7 +34,7 @@ public class OpenAIChatController {
     private final ChatClient chatClient;
     private final OpenAIService openAIService;
 
-    public OpenAIChatController(@Qualifier("openAIGeneralChatClient") ChatClient chatClient,
+    public OpenAIChatController(@Qualifier("openAIChatClient") ChatClient chatClient,
                                 OpenAIService openAIService) {
         this.chatClient = chatClient;
         this.openAIService = openAIService;

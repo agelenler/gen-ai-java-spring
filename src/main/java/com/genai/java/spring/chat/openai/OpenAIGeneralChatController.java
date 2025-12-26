@@ -33,7 +33,7 @@ public class OpenAIGeneralChatController {
         return chatClient.prompt()
 //                .options(chatOptions)
                 .system(SYSTEM_PROMPT)
-                .user(u -> u.text("Is the following a positive sentence (yes or no): {message}. Remember, you are classifying positive sentence (yes/no).")
+                .user(u -> u.text("Is the following a positive sentence (yes or no): {message}. Remember, you are classifying positive sentence (yes/no)")
                         .param("message", message))
                 .call()
                 .content();
