@@ -9,12 +9,28 @@ spring:
   application:
     name: gen-ai-java-spring
   ai:
+    chat:
+      memory:
+        repository:
+          jdbc:
+            # For local/dev, let Spring AI create the table automatically:
+            initialize-schema: always # If not exists, It creates the default table spring_ai_chat_memory with columns (conversation_id, role, content, metadata, …) for window-based memory.
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
+        max-document-batch-size: 10_000
     openai:
-      api-key: ${OPENAI_API_KEY} # dummy-string # ${HUGGINGFACE_API_KEY} #
-#      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
+      api-key: dummy-string # ${OPENAI_API_KEY} # dummy-string # ${HUGGINGFACE_API_KEY} #
+      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
       chat:
         options:
-          model: gpt-4o # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+          model: ai/gemma3 # gpt-4.1 # gpt-4.1 # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+      embedding:
+        options:
+          model: ai/mxbai-embed-large
     vertex:
       ai:
         gemini:
@@ -38,6 +54,15 @@ spring:
           model: mistral:7b # custom-mistral-model:latest
           max-new-tokens: 512
           temperature: 0.7
+  datasource:
+    url: jdbc:postgresql://localhost:5433/postgres?currentSchema=public&binaryTransfer=true&reWriteBatchedInserts=true&stringtype=unspecified
+    username: postgres
+    password: postgres
+#  sql:
+#    init:
+#      mode: always
+#      data-locations: classpath:/db/data.sql
+
 
 logging:
   level:
