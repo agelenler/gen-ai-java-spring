@@ -8,6 +8,10 @@ app:
 spring:
   application:
     name: gen-ai-java-spring
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   ai:
     chat:
       memory:
@@ -23,14 +27,35 @@ spring:
         dimensions: 1536
         max-document-batch-size: 10_000
     openai:
-      api-key: dummy-string # ${OPENAI_API_KEY} # dummy-string # ${HUGGINGFACE_API_KEY} #
-      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
+      api-key: ${OPENAI_API_KEY} # dummy-string # ${HUGGINGFACE_API_KEY} #
+#      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
       chat:
         options:
-          model: ai/gemma3 # gpt-4.1 # gpt-4.1 # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
-      embedding:
+          model:  gpt-4o # gpt-4.1 # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+#      embedding:
+#        options:
+#          model: ai/mxbai-embed-large
+      image:
         options:
-          model: ai/mxbai-embed-large
+          model: dall-e-3
+          n: 1
+          size: 1024x1024   # width x height
+          style: natural      # vivid | natural
+          quality: hd       # hd | standard | low
+          response-format: b64_json  # url | b64_json
+      audio:
+        transcription:
+          options:
+            model: whisper-1         # default
+            response-format: text     # text | json | verbose_json | srt | vtt
+            temperature: 0.7f
+            language: en
+        speech:
+          options:
+            model: tts-1      # default
+            response-format: MP3     # text | json | verbose_json | srt | vtt
+            speed: 1.5
+            language: en
     vertex:
       ai:
         gemini:
