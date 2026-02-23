@@ -4,6 +4,56 @@ server:
 app:
   ai:
     provider: openai # or openai
+  rag:
+    force-rebuild: true
+    top-k: 20
+    similarity-threshold: 0.0
+    radius: 1
+    chunk:
+      size: 100
+      min-chunk-size: 200
+      min-chunk-to-embed: 50
+      max-num-chunks: 8192
+      keep-separator: true
+    pdf:
+      mode: page #paragraph
+      path: file:/Users/Shared/rag-files/qa-over-internal-docs/*.pdf #classpath:rag/qa-over-internal-docs/*.pdf
+      pages-per-document: 1
+      left-alignment: true
+      number-of-top-text-lines-to-delete: 0
+      number-of-bottom-text-lines-to-delete: 0
+    query-expander:
+      number-of-queries: 4
+    rerank:
+      url: "https://api.cohere.com/v2/rerank"
+      api-key: ${COHERE_API_KEY}
+      model: "rerank-english-v3.0"
+      top-n: 6
+    synonyms:
+      PTO: "paid time off"
+      SSO: "single sign-on"
+      MFA: "multi-factor authentication"
+      2FA: "two-factor authentication"
+      IaC: "infrastructure as code"
+      PII: "personal data"
+      CI/CD: "continuous integration and delivery"
+      NAT: "network address translation"
+      GDPR: "data protection regulation"
+      VPN: "virtual private network"
+      SDLC: "software development lifecycle"
+      DNS: "domain name system"
+      IP: "internet protocol"
+      API: "application programming interface"
+      SDK: "software development kit"
+      UI: "user interface"
+      UX: "user experience"
+      DB: "database"
+      SQL: "structured query language"
+      NoSQL: "non-relational database"
+      OS: "operating system"
+      SSH: "secure shell"
+      HTTP: "hypertext transfer protocol"
+      HTTPS: "secure hypertext transfer protocol"
 
 spring:
   application:
@@ -21,6 +71,8 @@ spring:
             initialize-schema: always # If not exists, It creates the default table spring_ai_chat_memory with columns (conversation_id, role, content, metadata, …) for window-based memory.
     vectorstore:
       pgvector:
+        table-name-for-chat-memory: vector_store
+        table-name-for-rag: rag_vector_store
         initialize-schema: true
         index-type: HNSW
         distance-type: COSINE_DISTANCE
@@ -31,7 +83,7 @@ spring:
 #      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
       chat:
         options:
-          model:  gpt-4o # gpt-4.1 # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+          model:  gpt-4.1 # gpt-4o # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
 #      embedding:
 #        options:
 #          model: ai/mxbai-embed-large
