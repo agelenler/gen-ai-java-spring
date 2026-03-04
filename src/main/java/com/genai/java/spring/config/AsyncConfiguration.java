@@ -18,6 +18,19 @@ public class AsyncConfiguration {
         return (runnable) -> ContextSnapshotFactory.builder().build().captureAll().wrap(runnable);
     }
 
+    @Bean("traceableAsyncExecutor")
+    public Executor traceableAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        executor.setCorePoolSize(availableProcessors);
+        executor.setMaxPoolSize(availableProcessors);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("traceableThreadPoolExecutor-");
+        executor.setTaskDecorator(tracingTaskDecorator());
+        executor.initialize();
+        return executor;
+    }
+
     @Bean("traceableWatchLoopExecutor")
     public Executor traceableWatchLoopExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

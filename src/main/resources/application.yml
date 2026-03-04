@@ -4,6 +4,27 @@ server:
 app:
   ai:
     provider: openai # or openai
+  agent:
+    upload-dir: /Users/Shared/agent-files/uploads
+    diagram-tool:
+      temperature: 0.2
+    posture-tool:
+      url: http://localhost:8082/api/posture/{id}
+      env: prod
+    web-tool:
+      topK: 5
+      google-vertex-search:
+        endpoint-base-url: https://discoveryengine.googleapis.com
+        serving-config: projects/${GCP_PROJECT}/locations/global/collections/default_collection/dataStores/${DATASTORE_ID}/servingConfigs/default_serving_config
+      owasp:
+        cheat-sheet-protocol: "https://"
+        cheat-sheet-url: "cheatsheetseries.owasp.org/"
+        asvsUrl: "https://owasp.org/www-project-application-security-verification-standard/"
+    rag-tool:
+      similarity-threshold: 0.0
+      min-topK: 1
+      max-topK: 8
+      default-topK: 5
   rag:
     force-rebuild: true
     top-k: 20
@@ -83,7 +104,8 @@ spring:
 #      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
       chat:
         options:
-          model:  gpt-4.1 # gpt-4o # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+          model: gpt-5.2 # gpt-4o # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+          model-vision: gpt-4.1
 #      embedding:
 #        options:
 #          model: ai/mxbai-embed-large
