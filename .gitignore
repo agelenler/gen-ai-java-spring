@@ -10,6 +10,7 @@ target/
 .idea/compiler.xml
 .idea/libraries/
 .idea/copilot**
+.idea/**
 *.iws
 *.iml
 *.ipr

@@ -1,5 +1,6 @@
 package com.genai.java.spring.config;
 
+import com.genai.java.spring.aiagent.advisor.ContentSanitizerAdvisor;
 import com.genai.java.spring.chat.advisor.ErrorWrappingAdvisor;
 import com.genai.java.spring.chat.advisor.SystemPromptAdvisor;
 import com.genai.java.spring.chat.advisor.ValidationAdvisor;
@@ -18,6 +19,7 @@ import org.springframework.ai.chat.client.advisor.vectorstore.VectorStoreChatMem
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.huggingface.HuggingfaceChatModel;
@@ -56,6 +58,9 @@ public class AIProviderConfig {
 
     @Value("classpath:/templates/query-expander-prompt.st")
     private Resource queryExpanderPrompt;
+
+    @Value("${spring.ai.openai.chat.options.model-vision}")
+    private String openAIVisionModel;
 
     private static final int MAX_MESSAGES = 5;
 
@@ -208,6 +213,22 @@ public class AIProviderConfig {
                                            RetrievalAugmentationAdvisor retrievalAugmentationAdvisor) {
         return ChatClient.builder(openAiChatModel)
                 .defaultAdvisors(retrievalAugmentationAdvisor)
+                .build();
+    }
+
+    @Bean("openAIAgentChatClientVision")
+    ChatClient openAIAgentChatClientVision(OpenAiChatModel openAiChatModel) {
+        return ChatClient.builder(openAiChatModel)
+                .defaultOptions(ChatOptions.builder()
+                        .model(openAIVisionModel)
+                        .build())
+                .build();
+    }
+
+    @Bean("openAIAgentChatClient")
+    ChatClient openAIAgentChatClient(OpenAiChatModel openAiChatModel, ChatMemory chatMemory, ContentSanitizerAdvisor contentSanitizerAdvisor) {
+        return ChatClient.builder(openAiChatModel)
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build(), contentSanitizerAdvisor)
                 .build();
     }
 
