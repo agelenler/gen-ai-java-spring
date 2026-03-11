@@ -228,7 +228,7 @@ public class AIProviderConfig {
     @Bean("openAIAgentChatClient")
     ChatClient openAIAgentChatClient(OpenAiChatModel openAiChatModel, ChatMemory chatMemory, ContentSanitizerAdvisor contentSanitizerAdvisor) {
         return ChatClient.builder(openAiChatModel)
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build(), contentSanitizerAdvisor)
+                .defaultAdvisors(contentSanitizerAdvisor, MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .build();
     }
 

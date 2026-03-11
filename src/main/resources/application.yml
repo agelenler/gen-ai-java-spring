@@ -5,6 +5,7 @@ app:
   ai:
     provider: openai # or openai
   agent:
+    use-chain-workflow: false
     upload-dir: /Users/Shared/agent-files/uploads
     diagram-tool:
       temperature: 0.2
@@ -104,8 +105,8 @@ spring:
 #      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
       chat:
         options:
-          model: gpt-5.2 # gpt-4o # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
-          model-vision: gpt-4.1
+          model: gpt-4o-mini # gpt-4o # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+          model-vision: gpt-4.1-mini
 #      embedding:
 #        options:
 #          model: ai/mxbai-embed-large
@@ -153,14 +154,33 @@ spring:
           model: mistral:7b # custom-mistral-model:latest
           max-new-tokens: 512
           temperature: 0.7
+    mcp:
+      client:
+        # SYNC is default; set explicitly for clarity
+        type: SYNC
+        request-timeout: 30s
+        # auto-expose discovered MCP tools as Spring AI ToolCallbacks (handy if you later use ChatClient)
+        toolcallback:
+          enabled: true
+        streamable-http:
+          connections:
+            posture:
+              url: http://localhost:8082/mcp
+#        sse:
+#          connections:
+#            posture: # this becomes the bean name/qualifier
+#              url: http://localhost:8082
+#              sse-endpoint: /sse  # defaults to /sse; keep explicit since your server uses it
+#        stdio:
+#          servers-configuration: classpath:mcp-servers.json
   datasource:
     url: jdbc:postgresql://localhost:5433/postgres?currentSchema=public&binaryTransfer=true&reWriteBatchedInserts=true&stringtype=unspecified
     username: postgres
     password: postgres
-#  sql:
-#    init:
-#      mode: always
-#      data-locations: classpath:/db/data.sql
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:/db/data.sql
 
 
 logging:

@@ -1,15 +1,13 @@
 package com.genai.java.spring.aiagent.agent.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.genai.java.spring.aiagent.agent.SecurityReviewAgent;
 import com.genai.java.spring.aiagent.agent.records.Plan;
-import com.genai.java.spring.aiagent.agent.util.ToolResponseParser;
-import com.genai.java.spring.aiagent.config.data.AIAgentConfigData;
 import com.genai.java.spring.aiagent.dto.ReviewState;
-import com.genai.java.spring.aiagent.mcp.customtoolcallback.PostureCustomToolCallback;
 import com.genai.java.spring.aiagent.tools.diagram.DiagramTools;
 import com.genai.java.spring.aiagent.tools.exception.ToolExecutionException;
 import com.genai.java.spring.aiagent.tools.posture.PostureTools;
-import com.genai.java.spring.aiagent.tools.posture.PostureToolsWithMcpClient;
 import com.genai.java.spring.aiagent.tools.rag.RagTools;
 import com.genai.java.spring.aiagent.tools.web.WebTools;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +20,6 @@ import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.model.tool.ToolExecutionResult;
@@ -33,67 +30,62 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(prefix = "app", name = "agent.use-chain-workflow", havingValue = "false", matchIfMissing = true)
-public class SecurityReviewAgentVision implements SecurityReviewAgent {
-    private final ToolResponseParser toolResponseParser;
+@ConditionalOnProperty(prefix = "app", name = "agent.use-chain-workflow", havingValue = "true")
+public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
+
     private final ChatClient chatClient;
+    private final ObjectMapper objectMapper;
     private final ToolCallingManager toolCallingManager;
-    private final ToolCallback[] allTools;
+    private final ToolCallback[] diagramTools;
+    private final ToolCallback[] postureTools;
+    private final ToolCallback[] ragTools;
+    private final ToolCallback[] webTools;
     private final ToolCallback[] followUpTools;
 
     private static final int MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW = 6;
     private static final int MAX_TOOL_CALL_STEPS_FOLLOW_UP = 4; // keep follow-ups tight
 
-
-    public SecurityReviewAgentVision(ToolResponseParser toolResponseParser,
-                                     @Qualifier("openAIAgentChatClient") ChatClient chatClient,
-                                     DiagramTools diagramTools,
-                                     RagTools ragTools,
-                                     WebTools webTools,
-                                     AIAgentConfigData aiAgentConfigData,
-                                     SyncMcpToolCallbackProvider mcpTools) {
-        this.toolResponseParser = toolResponseParser;
+    public SecurityReviewAgentChainWorkflow(@Qualifier("openAIAgentChatClient") ChatClient chatClient,
+                                            ObjectMapper objectMapper,
+                                            DiagramTools diagramTools,
+                                            PostureTools postureTools,
+                                            RagTools ragTools,
+                                            WebTools webTools) {
         this.chatClient = chatClient;
+        this.objectMapper = objectMapper;
         this.toolCallingManager = ToolCallingManager.builder().build();
-
-        ToolCallback[] mcpToolsToolCallbacks = Arrays.stream(mcpTools.getToolCallbacks())
-                .map(toolCallback -> toolCallback.getToolDefinition().name().equals("security_posture")
-                        ? new PostureCustomToolCallback(toolCallback, aiAgentConfigData.getPostureTool().getEnv())
-                        : toolCallback)
-                .toArray(ToolCallback[]::new);
-
-        this.allTools = Stream.concat(
-                Arrays.stream(ToolCallbacks.from(diagramTools, ragTools, webTools)),
-                Arrays.stream(mcpToolsToolCallbacks))
-                .toArray(ToolCallback[]::new);
-
-        this.followUpTools = Stream.concat(
-                        Arrays.stream(ToolCallbacks.from(ragTools, webTools)),
-                        Arrays.stream(mcpToolsToolCallbacks))
-                .toArray(ToolCallback[]::new);
+        this.diagramTools = ToolCallbacks.from(diagramTools);
+        this.postureTools = ToolCallbacks.from(postureTools);
+        this.ragTools = ToolCallbacks.from(ragTools);
+        this.webTools = ToolCallbacks.from(webTools);
+        // During follow-up, we usually don’t need diagram_extract again; allow retrieval + posture
+        this.followUpTools = ToolCallbacks.from(postureTools, ragTools, webTools);
     }
 
     @Override
     public String execute(String userGoal, ReviewState reviewState) {
-        //1.) Plan
+        // 1.) Plan
         var plan = getPlan(reviewState.getFileName(), reviewState.getId());
         log.info("Received following plan from model: {}", plan);
-        //2.) Execute steps with ReAct
+
         var messages = getMessages(plan);
-        //Use user-controlled tool execution
-        var toolCallingChatOptions = getToolCallingChatOptions(allTools);
-        var prompt = new Prompt(messages, toolCallingChatOptions);
-        ChatResponse chatResponse = getChatResponse(reviewState.getId(), prompt);
-        prompt = executeToolCalls(reviewState.getId(), chatResponse, prompt, toolCallingChatOptions, MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
-        //Ask for the final report
+        Prompt prompt = new Prompt(messages);
+
+        // Execute diagram group (may make multiple tool calls until the model is satisfied)
+        prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(diagramTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+        // Execute posture group
+        prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(postureTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+        // Execute rag group
+        prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(ragTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+        // Execute web group
+        prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(webTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+
         return getFinalReport(reviewState.getId(), prompt);
     }
 
@@ -187,18 +179,45 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
         messages.add(new SystemMessage("""
                 You are executing a security review with a strict step budget = %s.
                 Think briefly, call a tool if needed, observe, and continue.
+                Call each tool exactly once in order diagram_extract → security_posture → rag_query → web_search.
+                Do NOT skip any tool calls.
+                After calling a tool, wait for the observation before proceeding.
+                If it succeeds, DO NOT call it again; proceed to the next phase.
                 Only cite evidence from diagram_extract, security_posture, rag_query and web_search outputs.
-                Call at most one tool per assistant turn. If multiple tools are needed, call them sequentially in separate turns in this order: diagram_extract → security_posture → rag_query → web_search.
                 """.formatted(MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW)));
+
+        // Seed context with the plan so the model knows the roadmap
         messages.add(new UserMessage("Execution plan:\n" + plan));
         return messages;
     }
 
-    private ToolCallingChatOptions getToolCallingChatOptions(ToolCallback[] allTools) {
+    private ToolCallingChatOptions getToolCallingChatOptions(ToolCallback[] tools) {
         return ToolCallingChatOptions.builder()
-                .toolCallbacks(allTools)
+                .toolCallbacks(tools)
                 .internalToolExecutionEnabled(false) // we will drive the loop
                 .build();
+    }
+
+    private Prompt runToolGroup(String conversationId, Prompt startingPrompt, ToolCallingChatOptions toolCallingChatOptions, int maxSteps) {
+        Prompt prompt = new Prompt(startingPrompt.getInstructions(), toolCallingChatOptions);
+        ChatResponse chatResponse = getChatResponse(conversationId, prompt);
+
+        int steps = 0;
+        ToolExecutionResult toolExecutionResult = null;
+
+        while (chatResponse.hasToolCalls() && steps++ < maxSteps) {
+            log.info("[chain] Executing tool call for group step: {}", steps);
+            toolExecutionResult = toolCallingManager.executeToolCalls(prompt, chatResponse);
+            assertNoToolError(toolExecutionResult);
+            prompt = new Prompt(toolExecutionResult.conversationHistory(), toolCallingChatOptions);
+            chatResponse = getChatResponse(conversationId, prompt);
+        }
+
+        if (toolExecutionResult != null) {
+            logToolExecutionResults(toolExecutionResult);
+        }
+
+        return new Prompt(prompt.getInstructions());
     }
 
     private ChatResponse getChatResponse(String id, Prompt prompt) {
@@ -208,40 +227,27 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
                 .chatResponse();
     }
 
-    private Prompt executeToolCalls(String id, ChatResponse chatResponse, Prompt prompt, ToolCallingChatOptions toolCallingChatOptions, int maxSteps) {
-        int steps = 0;
-        ToolExecutionResult toolExecutionResult = null;
-        while (chatResponse.hasToolCalls() && steps++ < maxSteps) {
-            log.info("Executing tool call with step: {}", steps);
-            //Execute any requested tool calls and append observations to the conversation
-            toolExecutionResult = toolCallingManager.executeToolCalls(prompt, chatResponse);
-            assertNoToolError(toolExecutionResult);
-            prompt = new Prompt(toolExecutionResult.conversationHistory(), toolCallingChatOptions); //add tool results as observation
-            chatResponse = getChatResponse(id, prompt); // model "thinks" based on observation
-        }
-        if (toolExecutionResult != null) {
-            logToolExecutionResults(toolExecutionResult);
-        }
-        return prompt;
-    }
-
-    private void assertNoToolError(ToolExecutionResult toolExecutionResult) {
-        for (Message message : toolExecutionResult.conversationHistory()) {
+    public void assertNoToolError(ToolExecutionResult exec) {
+        for (Message message : exec.conversationHistory()) {
             if (message instanceof ToolResponseMessage toolResponseMessage) {
                 List<ToolResponseMessage.ToolResponse> toolResponses = toolResponseMessage.getResponses();
                 for (ToolResponseMessage.ToolResponse toolResponse : toolResponses) {
-                    var parsedResponse = toolResponseParser.parse(toolResponse.responseData());
-                    Map<String, Object> payload = parsedResponse.payload();
-                    if (parsedResponse.isError()) {
-                        logAndBuild(toolResponseMessage.getMessageType().name(), "MCP_TOOL_ERROR",
-                                String.valueOf(payload.getOrDefault("message", "")));
-                    }
-
-                    // contract: {"error": "...", "message": "..."}
-                    Object error = payload.get("error");
-                    if (error != null && !String.valueOf(error).isEmpty()) {
-                        logAndBuild(toolResponseMessage.getMessageType().name(), String.valueOf(error),
-                                String.valueOf(payload.getOrDefault("message", "")));
+                    try {
+                        var map = objectMapper.readValue(toolResponse.responseData(), new TypeReference<Map<String, Object>>() {
+                        });
+                        Object err = map.get("error");
+                        if (err != null && !String.valueOf(err).isBlank()) {
+                            String code = String.valueOf(err);
+                            String detail = String.valueOf(map.getOrDefault("message", ""));
+                            ToolExecutionException toolExecutionException =
+                                    new ToolExecutionException(toolResponseMessage.getMessageType().name(), code, detail);
+                            log.warn("Tool Execution Failed! Continue without this tool call!", toolExecutionException);
+                        }
+                    } catch (ToolExecutionException exception) {
+                        throw exception;
+                    } catch (Exception jsonEx) {
+                        // If it's not valid JSON but contains "error", still fail fast
+                        throw new ToolExecutionException(toolResponseMessage.getMessageType().name(), "TOOL_ERROR", toolResponse.responseData());
                     }
                 }
             }
@@ -259,13 +265,9 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
                         .collect(Collectors.joining(" | ")));
     }
 
-    private void logAndBuild(String type, String code, String message) {
-        var ex = new ToolExecutionException(type, code, message);
-        log.warn("Tool Execution Failed! {}", ex.getMessage());
-    }
-
     private String getFinalReport(String id, Prompt prompt) {
-        List<Message> messages = new ArrayList<>(prompt.getInstructions());
+        List<Message> messages;
+        messages = new ArrayList<>(prompt.getInstructions());
         messages.add(new SystemMessage("""
                   Produce the final Security Review Report (Markdown):
                   - Summary
@@ -275,6 +277,7 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
                   - Mitigations (actionable)
                   - Diagram changes to apply (bullets)
                 """));
+
         return getChatContent(id, new Prompt(messages));
     }
 
@@ -295,6 +298,23 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
                 """));
         messages.add(new UserMessage(question));
         return messages;
+    }
+
+    private Prompt executeToolCalls(String id, ChatResponse chatResponse, Prompt prompt, ToolCallingChatOptions toolCallingChatOptions, int maxSteps) {
+        int steps = 0;
+        ToolExecutionResult toolExecutionResult = null;
+        while (chatResponse.hasToolCalls() && steps++ < maxSteps) {
+            log.info("Executing tool call with step: {}", steps);
+            //Execute any requested tool calls and append observations to the conversation
+            toolExecutionResult = toolCallingManager.executeToolCalls(prompt, chatResponse);
+            assertNoToolError(toolExecutionResult);
+            prompt = new Prompt(toolExecutionResult.conversationHistory(), toolCallingChatOptions); //add tool results as observation
+            chatResponse = getChatResponse(id, prompt); // model "thinks" based on observation
+        }
+        if (toolExecutionResult != null) {
+            logToolExecutionResults(toolExecutionResult);
+        }
+        return prompt;
     }
 
 }

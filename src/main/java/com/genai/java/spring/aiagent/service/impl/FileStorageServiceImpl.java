@@ -46,7 +46,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         } catch (IOException e) {
             throw new SecurityReviewAgentException("Could not save the file: " + file.getName(), e);
         }
-        return file.getName();
+        return fileName;
     }
 
     @Override
