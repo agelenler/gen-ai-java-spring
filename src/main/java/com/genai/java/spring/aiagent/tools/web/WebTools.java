@@ -143,17 +143,39 @@ public class WebTools {
     private List<WebItem> googleVertexSearchFiltered(String topic, int topK) {
         var googleSearchResponse = searchWithGoogleVertex(topic, topK);
 
-        List<Map<String, Object>> items = (List<Map<String, Object>>) googleSearchResponse.getOrDefault("items", List.of());
+        List<Map<String, Object>> results = (List<Map<String, Object>>) googleSearchResponse.getOrDefault("results", List.of());
 
-        return items.stream()
-                .map(it -> new WebItem(
-                        (String) it.getOrDefault("title", ""),
-                        (String) it.getOrDefault("link", ""),
-                        (String) it.getOrDefault("snippet", "")
-                ))
+        return results.stream()
+                .map(it -> {
+                    Map<String, Object> doc = (Map<String, Object>) it.get("document");
+                    Map<String, Object> derived = (Map<String, Object>) doc.get("derivedStructData");
+                    return new WebItem(
+                            (String) derived.getOrDefault("title", ""),
+                            (String) derived.getOrDefault("link", ""),
+                            getSnippets(derived)
+                    );
+                })
                 .limit(topK)
                 .toList();
     }
+
+    private String getSnippets(Map<String, Object> derived) {
+        List<String> snippets = new ArrayList<>();
+        Object snippetsObj = derived.get("snippets");
+
+        if (snippetsObj instanceof List<?> snippetList) {
+            for (Object s : snippetList) {
+                Map<String, Object> snippetMap = (Map<String, Object>) s;
+                String snippet = (String) snippetMap.get("snippet");
+
+                if (snippet != null && !snippet.isBlank()) {
+                    snippets.add(snippet);
+                }
+            }
+        }
+        return String.join(", ", snippets);
+    }
+
 
     private Map<String, Object> searchWithGoogleVertex(String topic, int topK) {
         Map<String, Object> body = Map.of(
@@ -162,9 +184,7 @@ public class WebTools {
         );
         String token = getToken();
         return webClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/v1/" + this.webToolProperties.getGoogleVertexSearch().getServingConfig() + ":search")
-                        .build(this.webToolProperties.getGoogleVertexSearch().getServingConfig()))
+                .uri("/v1/" + this.webToolProperties.getGoogleVertexSearch().getServingConfig() + ":search")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
