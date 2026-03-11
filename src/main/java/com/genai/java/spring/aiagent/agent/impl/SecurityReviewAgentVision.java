@@ -3,13 +3,10 @@ package com.genai.java.spring.aiagent.agent.impl;
 import com.genai.java.spring.aiagent.agent.SecurityReviewAgent;
 import com.genai.java.spring.aiagent.agent.records.Plan;
 import com.genai.java.spring.aiagent.agent.util.ToolResponseParser;
-import com.genai.java.spring.aiagent.config.data.AIAgentConfigData;
 import com.genai.java.spring.aiagent.dto.ReviewState;
-import com.genai.java.spring.aiagent.mcp.customtoolcallback.PostureCustomToolCallback;
 import com.genai.java.spring.aiagent.tools.diagram.DiagramTools;
 import com.genai.java.spring.aiagent.tools.exception.ToolExecutionException;
 import com.genai.java.spring.aiagent.tools.posture.PostureTools;
-import com.genai.java.spring.aiagent.tools.posture.PostureToolsWithMcpClient;
 import com.genai.java.spring.aiagent.tools.rag.RagTools;
 import com.genai.java.spring.aiagent.tools.web.WebTools;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +19,6 @@ import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.model.tool.ToolExecutionResult;
@@ -33,11 +29,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -56,29 +50,14 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
     public SecurityReviewAgentVision(ToolResponseParser toolResponseParser,
                                      @Qualifier("openAIAgentChatClient") ChatClient chatClient,
                                      DiagramTools diagramTools,
+                                     PostureTools postureTools,
                                      RagTools ragTools,
-                                     WebTools webTools,
-                                     AIAgentConfigData aiAgentConfigData,
-                                     SyncMcpToolCallbackProvider mcpTools) {
+                                     WebTools webTools) {
         this.toolResponseParser = toolResponseParser;
         this.chatClient = chatClient;
         this.toolCallingManager = ToolCallingManager.builder().build();
-
-        ToolCallback[] mcpToolsToolCallbacks = Arrays.stream(mcpTools.getToolCallbacks())
-                .map(toolCallback -> toolCallback.getToolDefinition().name().equals("security_posture")
-                        ? new PostureCustomToolCallback(toolCallback, aiAgentConfigData.getPostureTool().getEnv())
-                        : toolCallback)
-                .toArray(ToolCallback[]::new);
-
-        this.allTools = Stream.concat(
-                Arrays.stream(ToolCallbacks.from(diagramTools, ragTools, webTools)),
-                Arrays.stream(mcpToolsToolCallbacks))
-                .toArray(ToolCallback[]::new);
-
-        this.followUpTools = Stream.concat(
-                        Arrays.stream(ToolCallbacks.from(ragTools, webTools)),
-                        Arrays.stream(mcpToolsToolCallbacks))
-                .toArray(ToolCallback[]::new);
+        this.allTools = ToolCallbacks.from(diagramTools, ragTools, webTools, postureTools);
+        this.followUpTools = ToolCallbacks.from(ragTools, webTools, postureTools);
     }
 
     @Override

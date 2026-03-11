@@ -3,24 +3,7 @@ server:
 
 spring:
   application:
-    name: posture-service-mcp
-  ai:
-    mcp:
-      server:
-        name: posture-service-mcp
-        version: 1.0.0
-        type: SYNC
-        instructions: "This server provides posture analysis services"
-        protocol: STREAMABLE
-        streamable-http:
-          mcp-endpoint: /mcp
-#        sse-endpoint: /sse
-#        sse-message-endpoint: /mcp/messages
-        capabilities:
-          tool: true
-          resource: false
-          prompt: false
-          completion: false
+    name: posture-service
   datasource:
     url: jdbc:postgresql://localhost:5433/postgres?currentSchema=public&binaryTransfer=true&reWriteBatchedInserts=true&stringtype=unspecified
     username: postgres
