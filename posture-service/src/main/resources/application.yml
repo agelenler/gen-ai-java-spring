@@ -42,3 +42,28 @@ logging:
   level:
     root: INFO
     com.genai.posture: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        step: 5s
+  metrics:
+    enable:
+      all: true
+    distribution:
+      percentiles-histogram:
+        all: true
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://localhost:4317
+      transport: GRPC

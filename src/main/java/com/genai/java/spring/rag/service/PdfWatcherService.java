@@ -2,6 +2,7 @@ package com.genai.java.spring.rag.service;
 
 import com.genai.java.spring.rag.config.data.RagConfigData;
 import com.genai.java.spring.rag.exception.RagException;
+import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,6 +24,7 @@ public class PdfWatcherService implements SmartLifecycle {
     private final RagConfigData ragConfig;
     private final Executor watchLoop;
     private final ScheduledExecutorService debounce;
+    private final ObservationRegistry registry;
 
     private volatile boolean running = false;
     private java.nio.file.WatchService watchService;
@@ -32,11 +34,13 @@ public class PdfWatcherService implements SmartLifecycle {
     public PdfWatcherService(RagIngestionService ingestion,
                              RagConfigData ragConfig,
                              @Qualifier("traceableWatchLoopExecutor") Executor watchLoop,
-                             @Qualifier("traceableScheduledExecutorService") ScheduledExecutorService debounce) {
+                             @Qualifier("traceableScheduledExecutorService") ScheduledExecutorService debounce,
+                             ObservationRegistry registry) {
         this.ingestion = ingestion;
         this.ragConfig = ragConfig;
         this.watchLoop = watchLoop;
         this.debounce = debounce;
+        this.registry = registry;
     }
 
     @Override
@@ -46,6 +50,15 @@ public class PdfWatcherService implements SmartLifecycle {
 
     @Override
     public void start() {
+        Observation pdfWatcherObservability = Observation.start("rag.pdf.dir.watcher", registry);
+        try (Observation.Scope scope = pdfWatcherObservability.openScope()) {
+            doStart();
+        } finally {
+            pdfWatcherObservability.stop();
+        }
+    }
+
+    private void doStart() {
         try {
             Path dir = resolveWatchedDir();       // the directory, not the *.pdf glob
             log.info("Starting PDF folder watcher for dir: {}", dir);

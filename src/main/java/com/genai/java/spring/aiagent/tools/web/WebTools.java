@@ -3,6 +3,8 @@ package com.genai.java.spring.aiagent.tools.web;
 import com.genai.java.spring.aiagent.config.data.AIAgentConfigData;
 import com.genai.java.spring.aiagent.tools.web.records.WebArgs;
 import com.genai.java.spring.aiagent.tools.web.records.WebItem;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.core.ParameterizedTypeReference;
@@ -27,8 +29,10 @@ public class WebTools {
     private final WebClient webClient;
     private final GcpTokenProvider gcpTokenProvider;
     private final AIAgentConfigData.WebToolProperties webToolProperties;
+    private final ObservationRegistry registry;
 
-    public WebTools(WebClient.Builder builder, GcpTokenProvider gcpTokenProvider, AIAgentConfigData aiAgentConfigData) {
+    public WebTools(WebClient.Builder builder, GcpTokenProvider gcpTokenProvider, AIAgentConfigData aiAgentConfigData, ObservationRegistry registry) {
+        this.registry = registry;
         this.webClient = builder.baseUrl(aiAgentConfigData.getWebTool().getGoogleVertexSearch().getEndpointBaseUrl()).build();
         this.gcpTokenProvider = gcpTokenProvider;
         this.webToolProperties = aiAgentConfigData.getWebTool();
@@ -37,24 +41,29 @@ public class WebTools {
     @Tool(name = "web_search", description = "Fetch OWASP/NIST/CWE guidance (allowlisted domains only). Returns title/url/snippet.")
     public Map<String, Object> search(WebArgs webArgs) {
         try {
-            if (webArgs == null) {
-                return Collections.emptyMap();
+            Observation toolCallObservation = Observation.start("web_search", registry);
+            try (Observation.Scope scope = toolCallObservation.openScope()) {
+                if (webArgs == null) {
+                    return Collections.emptyMap();
+                }
+
+                log.info("Calling web_search tool with topic: {} and topK: {}", webArgs.topic(), webArgs.topK());
+
+                int topK = this.webToolProperties.getTopK();
+                String topic = webArgs.topic();
+
+                if (topic.isEmpty()) {
+                    return Map.of("matches", List.of(), "warning", "EMPTY_TOPIC");
+                }
+
+                List<WebItem> items = this.webToolProperties.getGoogleVertexSearch().getEndpointBaseUrl().isEmpty()
+                        ? fallbackOwaspIndexSearch(topic, topK)
+                        : googleVertexSearchFiltered(topic, topK);
+
+                return Map.of("matches", items);
+            } finally {
+                toolCallObservation.stop();
             }
-
-            log.info("Calling web_search tool with topic: {} and topK: {}", webArgs.topic(), webArgs.topK());
-
-            int topK = this.webToolProperties.getTopK();
-            String topic = webArgs.topic();
-
-            if (topic.isEmpty()) {
-                return Map.of("matches", List.of(), "warning", "EMPTY_TOPIC");
-            }
-
-            List<WebItem> items = this.webToolProperties.getGoogleVertexSearch().getEndpointBaseUrl().isEmpty()
-                    ? fallbackOwaspIndexSearch(topic, topK)
-                    : googleVertexSearchFiltered(topic, topK);
-
-            return Map.of("matches", items);
         } catch (Exception e) {
             return Map.of("error", "WEB_SEARCH_FAILED", "message", e.getMessage());
         }

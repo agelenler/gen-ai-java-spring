@@ -12,6 +12,9 @@ import com.genai.java.spring.aiagent.tools.posture.PostureTools;
 import com.genai.java.spring.aiagent.tools.posture.PostureToolsWithMcpClient;
 import com.genai.java.spring.aiagent.tools.rag.RagTools;
 import com.genai.java.spring.aiagent.tools.web.WebTools;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+import io.opentelemetry.api.OpenTelemetry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -48,6 +51,8 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
     private final ToolCallingManager toolCallingManager;
     private final ToolCallback[] allTools;
     private final ToolCallback[] followUpTools;
+    private final ObservationRegistry registry;
+    private final OpenTelemetry openTelemetry;
 
     private static final int MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW = 6;
     private static final int MAX_TOOL_CALL_STEPS_FOLLOW_UP = 4; // keep follow-ups tight
@@ -59,14 +64,20 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
                                      RagTools ragTools,
                                      WebTools webTools,
                                      AIAgentConfigData aiAgentConfigData,
-                                     SyncMcpToolCallbackProvider mcpTools) {
+                                     SyncMcpToolCallbackProvider mcpTools,
+                                     ObservationRegistry registry,
+                                     OpenTelemetry openTelemetry) {
         this.toolResponseParser = toolResponseParser;
         this.chatClient = chatClient;
+        this.registry = registry;
+        this.openTelemetry = openTelemetry;
         this.toolCallingManager = ToolCallingManager.builder().build();
 
         ToolCallback[] mcpToolsToolCallbacks = Arrays.stream(mcpTools.getToolCallbacks())
                 .map(toolCallback -> toolCallback.getToolDefinition().name().equals("security_posture")
-                        ? new PostureCustomToolCallback(toolCallback, aiAgentConfigData.getPostureTool().getEnv())
+                        ? new PostureCustomToolCallback(toolCallback,
+                        aiAgentConfigData.getPostureTool().getEnv(),
+                        openTelemetry)
                         : toolCallback)
                 .toArray(ToolCallback[]::new);
 
@@ -212,12 +223,17 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
         int steps = 0;
         ToolExecutionResult toolExecutionResult = null;
         while (chatResponse.hasToolCalls() && steps++ < maxSteps) {
-            log.info("Executing tool call with step: {}", steps);
-            //Execute any requested tool calls and append observations to the conversation
-            toolExecutionResult = toolCallingManager.executeToolCalls(prompt, chatResponse);
-            assertNoToolError(toolExecutionResult);
-            prompt = new Prompt(toolExecutionResult.conversationHistory(), toolCallingChatOptions); //add tool results as observation
-            chatResponse = getChatResponse(id, prompt); // model "thinks" based on observation
+            Observation toolCallObservation = Observation.start("tool.call.step=" + steps, registry);
+            try (Observation.Scope scope = toolCallObservation.openScope()) {
+                log.info("Executing tool call with step: {}", steps);
+                //Execute any requested tool calls and append observations to the conversation
+                toolExecutionResult = toolCallingManager.executeToolCalls(prompt, chatResponse);
+                assertNoToolError(toolExecutionResult);
+                prompt = new Prompt(toolExecutionResult.conversationHistory(), toolCallingChatOptions); //add tool results as observation
+                chatResponse = getChatResponse(id, prompt); // model "thinks" based on observation
+            } finally {
+                toolCallObservation.stop();
+            }
         }
         if (toolExecutionResult != null) {
             logToolExecutionResults(toolExecutionResult);

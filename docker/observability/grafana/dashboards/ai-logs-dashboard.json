@@ -1,0 +1,81 @@
+{
+  "uid": "ai-logs-loki-001",
+  "title": "AI Logs & Errors (Loki, header-only analytics)",
+  "tags": ["logs", "loki", "spring-boot"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 4,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "links": [
+    { "title": "Open Metrics", "url": "/d/ai-obsv-genai-003", "type": "link" }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "DS_LOKI",
+        "type": "datasource",
+        "label": "Loki",
+        "query": "loki",
+        "hide": 0
+      },
+      {
+        "name": "level",
+        "label": "Level (regex)",
+        "type": "custom",
+        "query": "ERROR|WARN|INFO|DEBUG|TRACE",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "current": { "text": "All", "value": ".*" }
+      },
+      {
+        "name": "logger",
+        "label": "Logger (regex)",
+        "type": "textbox",
+        "query": ".*",
+        "current": { "text": ".*", "value": ".*" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 11,
+      "title": "Logs by Level",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (level) (\n  count_over_time(\n    {job=\"applogs\"}\n    | regexp \"^(?P<ts>\\\\d{4}-\\\\d{2}-\\\\d{2}[ T]\\\\d{2}:\\\\d{2}:\\\\d{2}(?:\\\\.\\\\d{3})?)\\\\s+\\\\[[^]]*\\\\]\\\\s+(?P<level>TRACE|DEBUG|INFO|WARN|ERROR)\\\\b.*\"\n    | level!=\"\"\n    [$__interval]\n  )\n)"
+        }
+      ],
+      "options": { "legend": { "showLegend": true } },
+      "description": "Counts number of logs by level."
+    },
+
+    { "type": "row", "title": "Raw Logs", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 } },
+
+    {
+      "id": 20,
+      "title": "Logs",
+      "type": "logs",
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 18 },
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{job=\"applogs\"} |~ \"(?i)(${level:regex})\" |~ \"${logger}\" |~ \"\\\\S\""
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true
+      },
+      "description": "Shows raw lines; filter by Level (regex, case-insensitive) and Logger (regex) against the text."
+    }
+  ]
+}

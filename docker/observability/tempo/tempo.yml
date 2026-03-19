@@ -1,0 +1,54 @@
+server:
+  http_listen_port: 3200
+  grpc_listen_port: 9095
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+  trace_idle_period: 10s
+  max_block_bytes: 1_000_000
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 48h
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo
+    wal:
+      path: /var/tempo/wal
+
+# Controls sharding/parallelism for search jobs
+query_frontend:
+  # optional but recommended at scale
+  max_outstanding_per_tenant: 2000
+  search:
+    concurrent_jobs: 1000
+    # optional tuning knobs:
+    # target_bytes_per_job: 50000000
+    # hedge_requests_at: 5s
+    # hedge_requests_up_to: 3
+
+# Timeout settings live under *querier*, not query_frontend
+querier:
+  frontend_worker:
+    frontend_address: 127.0.0.1:9095
+  search:
+    query_timeout: 2m
+  trace_by_id:
+    query_timeout: 10s

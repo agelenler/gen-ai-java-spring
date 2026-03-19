@@ -1,0 +1,22 @@
+{
+  "menuEnabled": true,
+  "dependencies": {
+    "menuEnabled": true
+  },
+  "search": {
+    "maxLookback": {
+      "label": "7 Days",
+      "value": "7d"
+    }
+  },
+  "monitor": {
+    "menuEnabled": true
+  },
+  "archiveEnabled": false,
+  "tracking": {
+    "gaID": null
+  },
+  "themes": {
+    "enabled": true
+  }
+}
