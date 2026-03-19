@@ -1,0 +1,27 @@
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      # Derived fields: extract traceId/spanId from your log lines and link to Tempo
+      derivedFields:
+        - name: traceId
+          matcherRegex: 'traceId=([A-Fa-f0-9-]{16,32})'
+          datasourceUid: "${DS_TEMPO_UID}"   # or hardcode the Tempo UID/name once known
+          url: ""                            # not needed when datasourceUid is set
+        - name: spanId
+          matcherRegex: 'spanId=([A-Fa-f0-9-]{16,32})'
+          # optional: just extract for display/filtering; usually only traceId needs linking

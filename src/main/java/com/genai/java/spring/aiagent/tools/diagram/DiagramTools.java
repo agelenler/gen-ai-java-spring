@@ -5,6 +5,8 @@ import com.genai.java.spring.aiagent.service.FileStorageService;
 import com.genai.java.spring.aiagent.tools.diagram.records.DiagramExtractResult;
 import com.genai.java.spring.aiagent.tools.diagram.records.ExtractArgs;
 import com.genai.java.spring.aiagent.tools.diagram.records.Node;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -32,6 +34,7 @@ public class DiagramTools {
     private final ChatClient chatClient;
     private final FileStorageService fileStorage;
     private final AIAgentConfigData.DiagramToolProperties diagramToolProperties;
+    private final ObservationRegistry registry;
 
     private static final String SYSTEM_PROMPT = """
             You are a vision parser that extracts a software architecture graph from a diagram image.
@@ -51,23 +54,30 @@ public class DiagramTools {
 
     public DiagramTools(@Qualifier("openAIAgentChatClientVision") ChatClient chatClient,
                         FileStorageService fileStorage,
-                        AIAgentConfigData aiAgentConfigData) {
+                        AIAgentConfigData aiAgentConfigData,
+                        ObservationRegistry registry) {
         this.chatClient = chatClient;
         this.fileStorage = fileStorage;
         this.diagramToolProperties = aiAgentConfigData.getDiagramTool();
+        this.registry = registry;
     }
 
     @Tool(name = "diagram_extract", description = "Extract components/edges from an uploaded architecture diagram (image, Draw.io PNG export, or screenshot). Returns a normalized JSON graph.")
     Map<String, Object> extractDiagram(ExtractArgs extractArgs) {
         try {
-            log.info("Calling diagram_extract tool with file: {} and id: {}", extractArgs.fileName(), extractArgs.id());
-            var path = fileStorage.resolve(extractArgs.fileName());
-            var resource = new FileSystemResource(path);
-            var mime = Files.probeContentType(path);
-            var userText = buildUserText(extractArgs.hints());
-            var chatOptions = getChatOptions();
-            DiagramExtractResult diagramExtractResult = doExtractDiagram(extractArgs.id(), userText, mime, resource, chatOptions);
-            return toMap(diagramExtractResult);
+            Observation toolCallObservation = Observation.start("diagram_extract", registry);
+            try (Observation.Scope scope = toolCallObservation.openScope()) {
+                log.info("Calling diagram_extract tool with file: {} and id: {}", extractArgs.fileName(), extractArgs.id());
+                var path = fileStorage.resolve(extractArgs.fileName());
+                var resource = new FileSystemResource(path);
+                var mime = Files.probeContentType(path);
+                var userText = buildUserText(extractArgs.hints());
+                var chatOptions = getChatOptions();
+                DiagramExtractResult diagramExtractResult = doExtractDiagram(extractArgs.id(), userText, mime, resource, chatOptions);
+                return toMap(diagramExtractResult);
+            } finally {
+                toolCallObservation.stop();
+            }
         } catch (IOException e) {
             log.error("Error in diagram extract tool", e);
             return Map.of("error", "DIAGRAM_PARSE_FAILED", "message", e.getMessage());

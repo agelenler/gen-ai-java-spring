@@ -189,3 +189,29 @@ logging:
     com.genai.java.spring: INFO
     org.springframework.ai: INFO
     org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        step: 5s
+  metrics:
+    enable:
+      all: true
+    distribution:
+      percentiles-histogram:
+        all: true
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://localhost:4317
+      transport: GRPC

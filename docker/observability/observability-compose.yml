@@ -1,0 +1,95 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - spring-ai-monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - 3001:3000
+    volumes:
+      - grafana_storage:/var/lib/grafana
+      - ./grafana/provisioning/datasources/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./grafana/provisioning/dashboards/ai.yml:/etc/grafana/provisioning/dashboards/ai.yml
+      - ./grafana/dashboards:/etc/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/dashboards/ai-metrics-dashboard.json
+    depends_on:
+      - prometheus
+    networks:
+      - spring-ai-monitoring
+
+#  tempo:
+#    image: grafana/tempo:latest
+#    container_name: tempo
+#    command: ["-config.file=/etc/tempo/config.yml"]
+#    ports:
+#      - 3200:3200      # Tempo HTTP (Grafana datasource)
+#      - 4317:4317      # OTLP gRPC (optional direct app -> Tempo)
+#      - 4318:4318      # OTLP HTTP (optional direct app -> Tempo)
+#    volumes:
+#      - ./tempo/tempo.yml:/etc/tempo/config.yml
+#      - tempo_storage:/var/tempo
+#    networks:
+#      - spring-ai-monitoring
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    volumes:
+      - ./jaeger/jaeger-ui-config.json:/etc/jaeger/ui-config.json
+    command:
+      - "--query.ui-config=/etc/jaeger/ui-config.json"
+    networks:
+      - spring-ai-monitoring
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    command: ["-config.file=/etc/loki/config.yml"]
+    ports:
+      - 3100:3100      # Loki HTTP (Grafana datasource)
+    volumes:
+      - ./loki/loki.yml:/etc/loki/config.yml
+      - loki_storage:/loki
+    networks:
+      - spring-ai-monitoring
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    command: ["-config.file=/etc/promtail/config.yml"]
+    volumes:
+      - ./promtail/promtail.yml:/etc/promtail/config.yml:ro
+      - ../../logs:/host_logs:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - promtail_state:/run/promtail         # <- writable place for positions otherwise getting permission errors
+    depends_on:
+      - loki
+    networks:
+      - spring-ai-monitoring
+
+volumes:
+  grafana_storage:
+  tempo_storage:
+  loki_storage:
+  promtail_state:
+
+networks:
+  spring-ai-monitoring:
+    driver: bridge

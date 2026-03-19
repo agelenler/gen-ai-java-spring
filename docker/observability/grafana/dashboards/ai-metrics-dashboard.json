@@ -1,0 +1,225 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard",
+        "hide": true
+      }
+    ]
+  },
+  "editable": true,
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "spring-ai",
+    "genai",
+    "tempo",
+    "prometheus"
+  ],
+  "timezone": "browser",
+  "title": "AI Observability: Metrics + Traces (Spring AI / Prometheus / Tempo)",
+  "uid": "ai-obsv-genai-003",
+  "version": 1,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "label": "Prometheus",
+        "query": "prometheus"
+      },
+      {
+        "name": "DS_TEMPO",
+        "type": "datasource",
+        "label": "Tempo",
+        "query": "tempo"
+      },
+      {
+        "name": "model",
+        "label": "Model",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "query": "label_values(gen_ai_client_operation_seconds_count, gen_ai_request_model)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true
+      },
+      {
+        "name": "provider",
+        "label": "Provider",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "query": "label_values(gen_ai_client_operation_seconds_count, gen_ai_system)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Overview",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "collapsed": false
+    },
+    {
+      "id": 101,
+      "title": "AI Calls per Second (by model)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "expr": "sum by (gen_ai_request_model)(rate(gen_ai_client_operation_seconds_count{gen_ai_request_model=~\"${model:regex}\", gen_ai_system=~\"${provider:regex}\"}[$__rate_interval]))",
+          "legendFormat": "{{gen_ai_request_model}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "title": "Avg Latency (s)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(gen_ai_client_operation_seconds_sum[$__rate_interval])) / sum(rate(gen_ai_client_operation_seconds_count[$__rate_interval]))",
+          "legendFormat": "avg",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "title": "P95 Latency (s) (by model)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, gen_ai_request_model)(rate(gen_ai_client_operation_seconds_bucket[$__rate_interval])))",
+          "legendFormat": "{{gen_ai_request_model}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 104,
+      "title": "Tokens per Second (by model)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "expr": "sum by (gen_ai_request_model)(rate(gen_ai_client_token_usage_total{gen_ai_request_model=~\"${model:regex}\", gen_ai_system=~\"${provider:regex}\"}[$__rate_interval]))",
+          "legendFormat": "{{gen_ai_request_model}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 105,
+      "title": "Tokens per Request (Prompt Cost Proxy by model)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "expr": "sum by (gen_ai_request_model)(rate(gen_ai_client_token_usage_total[30m])) / sum by (gen_ai_request_model)(rate(gen_ai_client_operation_seconds_count[30m]))",
+          "legendFormat": "{{gen_ai_request_model}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Average tokens per request \u2013 useful proxy for prompt cost."
+    },
+    {
+      "type": "row",
+      "title": "Traces",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "collapsed": false
+    },
+    {
+      "id": 303,
+      "title": "Latest Traces",
+      "type": "table",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 26 },
+      "datasource": { "type": "tempo", "uid": "${DS_TEMPO}" },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "traceql",
+          "query": "{ span:name !~ \".*actuator.*\" }"
+        }
+      ],
+      "options": { "showHeader": true }
+    }
+  ]
+}
