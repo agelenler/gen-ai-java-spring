@@ -131,7 +131,7 @@ public class PdfWatcherService implements SmartLifecycle {
                 ingestion.upsertOneByPath(path);
             }
         } catch (Exception e) {
-            // log error
+            log.error("Could not handle event:{} -> for file:{}", kind.name(), path.getFileName());
         }
     }
 
