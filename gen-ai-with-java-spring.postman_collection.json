@@ -1,0 +1,1246 @@
+{
+  "info": {
+    "_postman_id": "086a52fc-101b-46f9-84f3-b4065013a4e2",
+    "name": "gen-ai-with-java-spring",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "3683237",
+    "_collection_link": "https://go.postman.co/collection/3683237-086a52fc-101b-46f9-84f3-b4065013a4e2?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "section-2",
+      "item": [
+        {
+          "name": "summarize-no-shot-no-system",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "I want to summarize the following meeting note \"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize-with-openai-java-client"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-one-shot-no-system",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "I want to summarize the following meeting note: \"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n\nUse following example to construct your reponse: \nMeeting note: \n\"In today’s sales strategy meeting, we reviewed Q3 targets and performance gaps. The team agreed to focus on enterprise clients and strengthen partnerships. A proposal was made to expand into two new regions. Marketing suggested aligning campaigns with sales objectives to improve lead conversion and shorten sales cycles\"\nExample Output: \n\" Action Items:\n* Focus on enterprise clients and partnerships.\n* Explore expansion into two new regions.\n* Align marketing campaigns with sales objectives.\nDecisions:\n* Enterprise clients prioritized for Q3.\n* Marketing and sales to work jointly on lead conversion.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-no-system",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-system",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-chatclientresponse",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-meeting-notes",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-with-openai-java-client",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize-with-openai-java-client"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "java-docs-gemini-vertex-ai",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize-with-openai-java-client"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "code-gen-hugging-face",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize-with-openai-java-client"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "email-drafting-ollama",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize-with-openai-java-client"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "linkedin-post-gen-docker-model-runner",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize-with-openai-java-client"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "section-3",
+      "item": [
+        {
+          "name": "summarize-with-streaming",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "structured-list",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "structured-map",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-meeting-notes-structured",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-meeting-notes-structured-list",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "linkedin-post-gen-docker-model-runner-chat-options",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize-with-openai-java-client"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "general-chat-open-ai",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize-with-openai-java-client"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-system-advisor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "section-4",
+      "item": [
+        {
+          "name": "general-chat-open-ai-cot",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize-with-openai-java-client"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-meeting-notes-structured-prompt-template",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "section-5",
+      "item": [
+        {
+          "name": "summarize-open-ai-jailbreak-toolcall",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\"In today’s Q3 planning meeting, the team discussed improving both technical reliability and user experience for our mobile payment solution. Engineering proposed migrating parts of the backend to microservices to boost scalability and adding real-time fraud detection using machine learning. The design team emphasized faster checkout flows and suggested reducing confirmation steps. They also recommended adding biometric authentication options like Face ID and fingerprint login. Marketing highlighted that smoother payments drive retention and customer satisfaction. The group agreed that technical upgrades and UX enhancements should move forward in parallel, with coordination across engineering, design, and marketing.\"\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize-with-openai-java-client"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-system-prompt-injection",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "general-chat-context-switching",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "general-chat-dictionary-attack",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "summarize-system-prompt-leaking",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "section-6",
+      "item": [
+        {
+          "name": "common-chat-token-usage",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "section-7",
+      "item": [
+        {
+          "name": "common-chat-memory",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Can you suggest a place to visit in Japan?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/openai/chat/summarize",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "openai",
+                "chat",
+                "summarize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "order-status-helper-chat-memory",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/order/chat/status",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "order",
+                "chat",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "section-8",
+      "item": [
+        {
+          "name": "product-compliance-check-image-to-text",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/products/upload-with-compliance-check",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "products",
+                "upload-with-compliance-check"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "marketing-asset-generator-text-to-image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/products/upload-with-compliance-check",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "products",
+                "upload-with-compliance-check"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "meeting-assistant-speech-to-text",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/products/upload-with-compliance-check",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "products",
+                "upload-with-compliance-check"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ticket-status-notifier-text-to-speech",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/products/upload-with-compliance-check",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "products",
+                "upload-with-compliance-check"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "section-10",
+      "item": [
+        {
+          "name": "it-support-in-prompt-context",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "I need help to order a new table",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/it-support/ask",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "it-support",
+                "ask"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "employee-handbook-simple-rag-pipeline",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "How can I provide a badge to my visitor?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/employee-handbook/ask",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "employee-handbook",
+                "ask"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "internal-qa-advanced-rag-pipeline",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "How can I provide a badge to my visitor?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/employee-handbook/ask",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "employee-handbook",
+                "ask"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "section-11",
+      "item": [
+        {
+          "name": "ai-agent-vision-diagram-security-analysis-create",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "How can I provide a badge to my visitor?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/employee-handbook/ask",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "employee-handbook",
+                "ask"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ai-agent-vision-diagram-security-analysis-get",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "How can I provide a badge to my visitor?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/employee-handbook/ask",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "employee-handbook",
+                "ask"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ai-agent-vision-diagram-security-analysis-followup",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"question\": \"Can I use ssl connection on Kafka?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/security-review/a0e7aa50-3ee1-44b7-b1ec-69736ea23654/ask",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "security-review",
+                "a0e7aa50-3ee1-44b7-b1ec-69736ea23654",
+                "ask"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "posture-service",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "How can I provide a badge to my visitor?",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/employee-handbook/ask",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "employee-handbook",
+                "ask"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
