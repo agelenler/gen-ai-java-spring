@@ -50,7 +50,7 @@ public class OpenAIChatController {
     }
 
     @PostMapping("/summarize-meeting-notes")
-    public String summarizeMeetingNotes(@RequestBody String meetingNotes) {
+    public String summarizeMeetingNotes2(@RequestBody String meetingNotes) {
         return chatClient.prompt()
                 .system(SYSTEM_PROMPT)
                 .user(u -> u.text("Can you summarize the following meeting notes: {meetingNotes}" +

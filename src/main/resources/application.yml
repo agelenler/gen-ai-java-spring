@@ -98,14 +98,14 @@ spring:
         initialize-schema: true
         index-type: HNSW
         distance-type: COSINE_DISTANCE
-        dimensions: 1536
+        dimensions: 1536 # 1024
         max-document-batch-size: 10_000
     openai:
       api-key: ${OPENAI_API_KEY} # dummy-string # ${HUGGINGFACE_API_KEY} #
 #      base-url: http://localhost:12434/engines/llama.cpp # http://localhost:11434 # https://c36lms1cq3pw5m7e.us-east-1.aws.endpoints.huggingface.cloud # https://router.huggingface.co
       chat:
         options:
-          model: gpt-4o-mini # gpt-4o # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
+          model: gpt-4o-mini  # gpt-4o # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
           model-vision: gpt-4.1-mini
 #      embedding:
 #        options:
