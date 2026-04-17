@@ -25,7 +25,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "raw": "localhost:8081/api/openai/chat/summarize",
               "host": [
                 "localhost"
               ],
@@ -34,7 +34,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize-with-openai-java-client"
+                "summarize"
               ]
             }
           },
@@ -175,7 +175,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/openai/chat/summarize-meeting-notes",
               "host": [
                 "localhost"
               ],
@@ -184,7 +184,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize"
+                "summarize-meeting-notes"
               ]
             }
           },
@@ -235,16 +235,16 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "raw": "localhost:8081/api/vertexai/chat/generate-java-docs",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "openai",
+                "vertexai",
                 "chat",
-                "summarize-with-openai-java-client"
+                "generate-java-docs"
               ]
             }
           },
@@ -265,16 +265,16 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "raw": "localhost:8081/api/huggingface/chat/generate-code",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "openai",
+                "huggingface",
                 "chat",
-                "summarize-with-openai-java-client"
+                "generate-code"
               ]
             }
           },
@@ -295,16 +295,16 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "raw": "localhost:8081/api/ollama/chat/draft-email",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "openai",
+                "ollama",
                 "chat",
-                "summarize-with-openai-java-client"
+                "draft-email"
               ]
             }
           },
@@ -325,16 +325,16 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "raw": "localhost:8081/api/docker-model-runner/chat/linkedin-post-generator",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "openai",
+                "docker-model-runner",
                 "chat",
-                "summarize-with-openai-java-client"
+                "linkedin-post-generator"
               ]
             }
           },
@@ -360,7 +360,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/openai/chat/summarize-with-streaming",
               "host": [
                 "localhost"
               ],
@@ -369,7 +369,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize"
+                "summarize-with-streaming"
               ]
             }
           },
@@ -390,7 +390,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/openai/chat/structured-list",
               "host": [
                 "localhost"
               ],
@@ -399,7 +399,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize"
+                "structured-list"
               ]
             }
           },
@@ -420,7 +420,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/openai/chat/structured-map",
               "host": [
                 "localhost"
               ],
@@ -429,7 +429,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize"
+                "structured-map"
               ]
             }
           },
@@ -450,7 +450,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/openai/chat/summarize-meeting-notes-structured",
               "host": [
                 "localhost"
               ],
@@ -459,7 +459,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize"
+                "summarize-meeting-notes-structured"
               ]
             }
           },
@@ -480,7 +480,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/openai/chat/summarize-meeting-notes-structured-list",
               "host": [
                 "localhost"
               ],
@@ -489,7 +489,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize"
+                "summarize-meeting-notes-structured-list"
               ]
             }
           },
@@ -510,16 +510,16 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "raw": "localhost:8081/api/docker-model-runner/chat/linkedin-post-generator",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "openai",
+                "docker-model-runner",
                 "chat",
-                "summarize-with-openai-java-client"
+                "linkedin-post-generator"
               ]
             }
           },
@@ -540,7 +540,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "raw": "localhost:8081/api/openai/chat/general-chat",
               "host": [
                 "localhost"
               ],
@@ -549,7 +549,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize-with-openai-java-client"
+                "general-chat"
               ]
             }
           },
@@ -605,7 +605,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "raw": "localhost:8081/api/openai/chat/general-chat",
               "host": [
                 "localhost"
               ],
@@ -614,7 +614,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize-with-openai-java-client"
+                "general-chat"
               ]
             }
           },
@@ -635,7 +635,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/openai/chat/summarize-meeting-notes-structured-with-prompt-template",
               "host": [
                 "localhost"
               ],
@@ -644,7 +644,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize"
+                "summarize-meeting-notes-structured-with-prompt-template"
               ]
             }
           },
@@ -670,7 +670,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize-with-openai-java-client",
+              "raw": "localhost:8081/api/openai/chat/summarize",
               "host": [
                 "localhost"
               ],
@@ -679,7 +679,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize-with-openai-java-client"
+                "summarize"
               ]
             }
           },
@@ -730,7 +730,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/openai/chat/general-chat",
               "host": [
                 "localhost"
               ],
@@ -739,7 +739,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize"
+                "general-chat"
               ]
             }
           },
@@ -760,7 +760,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/openai/chat/general-chat",
               "host": [
                 "localhost"
               ],
@@ -769,7 +769,7 @@
                 "api",
                 "openai",
                 "chat",
-                "summarize"
+                "general-chat"
               ]
             }
           },
@@ -825,7 +825,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/common/chat",
               "host": [
                 "localhost"
               ],
@@ -833,8 +833,7 @@
               "path": [
                 "api",
                 "openai",
-                "chat",
-                "summarize"
+                "chat"
               ]
             }
           },
@@ -860,7 +859,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/openai/chat/summarize",
+              "raw": "localhost:8081/api/common/chat",
               "host": [
                 "localhost"
               ],
@@ -868,8 +867,7 @@
               "path": [
                 "api",
                 "openai",
-                "chat",
-                "summarize"
+                "chat"
               ]
             }
           },
@@ -954,15 +952,15 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/products/upload-with-compliance-check",
+              "raw": "localhost:8081/api/marketing-assets/generate-campaign-image",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "products",
-                "upload-with-compliance-check"
+                "marketing-assets",
+                "generate-campaign-image"
               ]
             }
           },
@@ -983,15 +981,15 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/products/upload-with-compliance-check",
+              "raw": "localhost:8081/api/meeting-assistant/transcribe-summarize",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "products",
-                "upload-with-compliance-check"
+                "meeting-assistant",
+                "transcribe-summarize"
               ]
             }
           },
@@ -1012,15 +1010,15 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/products/upload-with-compliance-check",
+              "raw": "localhost:8081/api/tickets/status",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "products",
-                "upload-with-compliance-check"
+                "tickets",
+                "status"
               ]
             }
           },
@@ -1104,14 +1102,14 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/employee-handbook/ask",
+              "raw": "localhost:8081/api/internal-qa/ask?filter=doc_type == 'secure_development' %26%26 updated_at >= '2026-02-16'",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "employee-handbook",
+                "internal-qa",
                 "ask"
               ]
             }
@@ -1138,15 +1136,14 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/employee-handbook/ask",
+              "raw": "localhost:8081/api/security-review",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "employee-handbook",
-                "ask"
+                "security-review"
               ]
             }
           },
@@ -1167,15 +1164,14 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/employee-handbook/ask",
+              "raw": "localhost:8081/api/security-review/45b723e1-8d18-41f3-9525-2cda8b54c3a0",
               "host": [
                 "localhost"
               ],
               "port": "8081",
               "path": [
                 "api",
-                "employee-handbook",
-                "ask"
+                "security-review"
               ]
             }
           },
@@ -1196,7 +1192,7 @@
               }
             },
             "url": {
-              "raw": "localhost:8081/api/security-review/a0e7aa50-3ee1-44b7-b1ec-69736ea23654/ask",
+              "raw": "localhost:8081/api/security-review/45b723e1-8d18-41f3-9525-2cda8b54c3a0/ask",
               "host": [
                 "localhost"
               ],
@@ -1204,7 +1200,7 @@
               "path": [
                 "api",
                 "security-review",
-                "a0e7aa50-3ee1-44b7-b1ec-69736ea23654",
+                "45b723e1-8d18-41f3-9525-2cda8b54c3a0",
                 "ask"
               ]
             }
