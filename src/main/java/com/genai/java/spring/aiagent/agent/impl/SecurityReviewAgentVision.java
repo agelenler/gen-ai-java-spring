@@ -44,7 +44,6 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(prefix = "app", name = "agent.use-chain-workflow", havingValue = "false", matchIfMissing = true)
 public class SecurityReviewAgentVision implements SecurityReviewAgent {
     private final ToolResponseParser toolResponseParser;
     private final ChatClient chatClient;
