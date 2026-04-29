@@ -82,8 +82,7 @@ public class SecurityReviewServiceImpl implements SecurityReviewService {
         try {
             log.info("Starting security review agent for reviewId={} on file={}", state.getId(), state.getFileName());
             state.updateStatus(ReviewStatus.RUNNING);
-            String goal = "Review security for fileName=%s; use posture, RAG, Web; produce final report.".formatted(state.getFileName());
-            String report = securityReviewAgent.execute(goal, state);
+            String report = securityReviewAgent.execute(state);
             log.info("Final report: {}", report);
             state.updateReportMarkdown(report);
             state.updateStatus(ReviewStatus.DONE);

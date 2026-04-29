@@ -93,7 +93,7 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
     }
 
     @Override
-    public String execute(String userGoal, ReviewState reviewState) {
+    public String execute(ReviewState reviewState) {
         //1.) Plan
         var plan = getPlan(reviewState.getFileName(), reviewState.getId());
         log.info("Received following plan from model: {}", plan);
