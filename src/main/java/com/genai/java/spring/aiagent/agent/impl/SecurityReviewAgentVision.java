@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(prefix = "app", name = "agent.use-chain-workflow", havingValue = "false", matchIfMissing = true)
 public class SecurityReviewAgentVision implements SecurityReviewAgent {
     private final ToolResponseParser toolResponseParser;
     private final ChatClient chatClient;
@@ -61,7 +60,7 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
     }
 
     @Override
-    public String execute(String userGoal, ReviewState reviewState) {
+    public String execute(ReviewState reviewState) {
         //1.) Plan
         var plan = getPlan(reviewState.getFileName(), reviewState.getId());
         log.info("Received following plan from model: {}", plan);
