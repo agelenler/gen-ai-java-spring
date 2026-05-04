@@ -1,10 +1,18 @@
 package com.genai.java.spring.aiagent.agent.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.genai.java.spring.aiagent.agent.SecurityReviewAgent;
 import com.genai.java.spring.aiagent.agent.records.Plan;
+import com.genai.java.spring.aiagent.dataaccess.helper.ReviewStateRepositoryHelper;
+import com.genai.java.spring.aiagent.dto.AgentRunResult;
+import com.genai.java.spring.aiagent.dto.ApprovalType;
+import com.genai.java.spring.aiagent.dto.PendingApproval;
+import com.genai.java.spring.aiagent.dto.ReviewCheckpoint;
 import com.genai.java.spring.aiagent.dto.ReviewState;
+import com.genai.java.spring.aiagent.dto.ReviewStatus;
+import com.genai.java.spring.aiagent.service.PromptSerializer;
 import com.genai.java.spring.aiagent.tools.diagram.DiagramTools;
 import com.genai.java.spring.aiagent.tools.exception.ToolExecutionException;
 import com.genai.java.spring.aiagent.tools.posture.PostureTools;
@@ -30,6 +38,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,6 +48,9 @@ import java.util.stream.Collectors;
 @ConditionalOnProperty(prefix = "app", name = "agent.use-chain-workflow", havingValue = "true")
 public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
 
+    private static final int MAX_RETRIES = 5;
+    private static final String DIAGRAM_EXTRACT = "diagram_extract";
+
     private final ChatClient chatClient;
     private final ObjectMapper objectMapper;
     private final ToolCallingManager toolCallingManager;
@@ -47,18 +59,24 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
     private final ToolCallback[] ragTools;
     private final ToolCallback[] webTools;
     private final ToolCallback[] followUpTools;
+    private final PromptSerializer promptSerializer;
+    private final ReviewStateRepositoryHelper reviewStateRepositoryHelper;
 
-    private static final int MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW = 6;
-    private static final int MAX_TOOL_CALL_STEPS_FOLLOW_UP = 4; // keep follow-ups tight
+    private static final int MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW = 2;
+    private static final int MAX_TOOL_CALL_STEPS_FOLLOW_UP = 1; // keep follow-ups tight
 
     public SecurityReviewAgentChainWorkflow(@Qualifier("openAIAgentChatClient") ChatClient chatClient,
                                             ObjectMapper objectMapper,
                                             DiagramTools diagramTools,
                                             PostureTools postureTools,
                                             RagTools ragTools,
-                                            WebTools webTools) {
+                                            WebTools webTools,
+                                            PromptSerializer promptSerializer,
+                                            ReviewStateRepositoryHelper reviewStateRepositoryHelper) {
         this.chatClient = chatClient;
         this.objectMapper = objectMapper;
+        this.promptSerializer = promptSerializer;
+        this.reviewStateRepositoryHelper = reviewStateRepositoryHelper;
         this.toolCallingManager = ToolCallingManager.builder().build();
         this.diagramTools = ToolCallbacks.from(diagramTools);
         this.postureTools = ToolCallbacks.from(postureTools);
@@ -69,24 +87,96 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
     }
 
     @Override
-    public String execute(ReviewState reviewState) {
-        // 1.) Plan
-        var plan = getPlan(reviewState.getFileName(), reviewState.getId());
-        log.info("Received following plan from model: {}", plan);
+    public AgentRunResult execute(ReviewState reviewState) {
+        //Initialize checkpoint if null
+        if (reviewState.getCheckpoint() == null) {
+            reviewState.setCheckpoint(ReviewCheckpoint.INIT);
+        }
 
-        var messages = getMessages(plan);
-        Prompt prompt = new Prompt(messages);
+        // Load or create prompt snapshot
+        Prompt prompt = reviewState.hasPromptSnapshot()
+                ? promptSerializer.deserialize(reviewState.getPromptSnapshot())
+                : new Prompt("");
 
-        // Execute diagram group (may make multiple tool calls until the model is satisfied)
-        prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(diagramTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
-        // Execute posture group
-        prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(postureTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
-        // Execute rag group
-        prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(ragTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
-        // Execute web group
-        prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(webTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+        while (true) {
+            switch (reviewState.getCheckpoint()) {
+                case INIT -> {
+                    var plan = getPlan(reviewState.getFileName(), reviewState.getId());
+                    log.info("Received following plan from model: {}", plan);
+                    reviewState.setPlan(plan);
+                    prompt = new Prompt(getMessages(plan));
+                    reviewState.setCheckpoint(ReviewCheckpoint.AFTER_PLAN);
+                    setPromptSnapshot(reviewState, prompt);
+                    // Continue loop to next checkpoint
+                }
 
-        return getFinalReport(reviewState.getId(), prompt);
+                case AFTER_PLAN -> {
+                    // Execute diagram group (may make multiple tool calls until the model is satisfied)
+                    prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(diagramTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+                    reviewState.setCheckpoint(ReviewCheckpoint.BEFORE_DIAGRAM_APPROVAL);
+                    setPromptSnapshot(reviewState, prompt);
+                    // Gate: pause for human approval
+                    return pauseForHuman(reviewState, "Confirm extracted services/edges from diagram", buildDiagramPayload(prompt));
+                }
+
+                case BEFORE_DIAGRAM_APPROVAL -> {
+                    // Human approved or auto-continue. Move to next stage
+                    reviewState.setCheckpoint(ReviewCheckpoint.AFTER_DIAGRAM);
+                    setPromptSnapshot(reviewState, prompt);
+                    // Continue with posture execution
+                }
+
+                case AFTER_DIAGRAM -> {
+                    // Execute posture group
+                    prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(postureTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+                    reviewState.setCheckpoint(ReviewCheckpoint.AFTER_POSTURE);
+                    setPromptSnapshot(reviewState, prompt);
+                    // Continue with RAG execution
+                }
+
+                case AFTER_POSTURE -> {
+                    // Execute rag group
+                    prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(ragTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+                    reviewState.setCheckpoint(ReviewCheckpoint.AFTER_RAG);
+                    setPromptSnapshot(reviewState, prompt);
+                    // Continue with WEB execution
+                }
+
+                case AFTER_RAG -> {
+                    // Execute web group
+                    prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(webTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+                    reviewState.setCheckpoint(ReviewCheckpoint.AFTER_WEB);
+                    setPromptSnapshot(reviewState, prompt);
+                    // Continue with final approval gate
+                }
+
+                case AFTER_WEB -> {
+                    // Gate: pause for final report approval before marking DONE
+                    reviewState.setCheckpoint(ReviewCheckpoint.BEFORE_FINAL_APPROVAL);
+                    setPromptSnapshot(reviewState, prompt);
+                    // Generate preview report for approval
+                    String reportPreview = getFinalReport(reviewState.getId(), prompt);
+                    reviewState.updateReportMarkdown(reportPreview);
+                    return pauseForHuman(reviewState, "Approve final security review report",
+                            Map.of("reportPreview", reportPreview));
+                }
+
+                case BEFORE_FINAL_APPROVAL -> {
+                    // Human approved final report. Mark as DONE
+                    String report = reviewState.getReportMarkdown() != null ? reviewState.getReportMarkdown()
+                            : getFinalReport(reviewState.getId(), prompt);
+                    reviewState.updateReportMarkdown(report);
+                    reviewState.setCheckpoint(ReviewCheckpoint.DONE);
+                    reviewState.updateStatus(ReviewStatus.DONE);
+                    return AgentRunResult.done(report);
+                }
+
+                default -> {
+                    log.warn("Unknown checkpoint: {}", reviewState.getCheckpoint());
+                    return AgentRunResult.continueRunning();
+                }
+            }
+        }
     }
 
     @Override
@@ -103,7 +193,7 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
     }
 
     private Plan getPlan(String fileName, String id) {
-        String goal = """
+        StringBuilder goal = new StringBuilder("""
                 Task: Review security risks for the uploaded architecture diagram (fileName=%s, id=%s).
                 Follow this MANDATORY ORDER when planning (no tool calls in this message):
                 1) Extract the diagram structure (diagram_extract).
@@ -111,8 +201,8 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
                 3) Retrieve internal policy snippets relevant to the *posture findings* and diagram (rag_query).
                 4) Fetch OWASP/NIST/CWE guidance for the same topics (web_search).
                 5) Synthesize the final report (synthesize).
-                Return ONLY JSON matching {"steps":[...]} with toolHint and targets. Do NOT place rag_query or web_search before security_posture.
-                """.formatted(fileName, id);
+                Return ONLY valid JSON matching {"steps":[...]} with toolHint and targets. Do NOT place rag_query or web_search before security_posture.
+                """.formatted(fileName, id));
 
         String system = """
                 You are planning a security architecture review. Produce a 3–5 step JSON plan.
@@ -138,18 +228,7 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
                   {"step":5,"goal":"...","toolHint":"","targets":[]}
                 ]}
                 
-                You MUST NOT produce a final or interim textual answer until you have:
-                1) called diagram_extract once;
-                2) called security_posture for each target service that are defined in step with targets; Do not call security posture more than once for the same service
-                3) called rag_query for selected topics;
-                4.) called web_search for selected topics;
-                Then produce the report. If any tool is unavailable, say which one and stop.
-                
-                You must not return more than one tool calling request for each step! But keep your tool call requests in a list and return
-                If you have a list of information that requires multiple tool calls, pass all the information back to allow calling
-                the tools in a loop once and get all tool calling results back at once.
-                For rag_query and web_query never send a multi-topic query in a single text, return a list of strings so that
-                each of the elements in list will trigger a tool call in a loop on application layer.
+                CRITICAL: Ensure all JSON is properly closed. Each object must end with }. Each array must end with ].
                 
                 Rules:
                 - Node types can be one of service|client|database|message_broker|topic|redis
@@ -160,17 +239,36 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
                 - Never place rag_query or web_search before security_posture.
                 - Do not omit rag_query or web_search, use both in any case.
                 - Keep steps minimal and executable; prefer 4–5 steps.
-                - Call at most one tool per assistant turn. If multiple tools are needed, call them sequentially in separate turns in this order: diagram_extract → security_posture → rag_query → web_search.
                 - Targets is an array of ids or topic hints; "file:<fileName>" for the diagram step.
                 - No prose; JSON only.
                 """;
 
-        return chatClient.prompt()
-                .system(system)
-                .user(goal)
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, id))
-                .call()
-                .entity(Plan.class);
+        // Retry logic for handling malformed LLM responses
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                log.info("Attempt {}/{} to get plan for id={}", attempt, MAX_RETRIES, id);
+                Plan plan = chatClient.prompt()
+                        .system(system)
+                        .user(goal.toString())
+                        .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, id))
+                        .call()
+                        .entity(Plan.class);
+                log.info("Successfully received plan for id={} on attempt {}", id, attempt);
+                return plan;
+            } catch (Exception e) {
+                log.warn("Failed to parse plan on attempt {}: {}", attempt, e.getMessage());
+                if (attempt == MAX_RETRIES) {
+                    log.error("All {} attempts to get plan failed for id={}", MAX_RETRIES, id);
+                    throw new RuntimeException("Failed to generate valid plan after " + MAX_RETRIES + " attempts", e);
+                }
+
+                // Add retry instruction for next attempt
+                goal.append("\n\nIMPORTANT: Previous response was malformed JSON." +
+                        " Ensure ALL brackets and braces are properly closed.");
+            }
+        }
+
+        throw new RuntimeException("Unexpected error in getPlan retry logic!");
 
     }
 
@@ -315,6 +413,66 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
             logToolExecutionResults(toolExecutionResult);
         }
         return prompt;
+    }
+
+    private void setPromptSnapshot(ReviewState reviewState, Prompt prompt) {
+        reviewState.setPromptSnapshot(promptSerializer.serialize(prompt, reviewState.getId(),
+                reviewState.getCheckpoint().name()));
+        reviewStateRepositoryHelper.saveReviewState(reviewState);
+    }
+
+    /**
+     * Pause execution for human approval and return paused result with pending approval info.
+     */
+    private AgentRunResult pauseForHuman(ReviewState reviewState, String message, Map<String, Object> payload) {
+        reviewState.updateStatus(ReviewStatus.PENDING_APPROVAL_DIAGRAM_EXTRACT);
+        if (reviewState.getCheckpoint() == ReviewCheckpoint.BEFORE_FINAL_APPROVAL) {
+            reviewState.updateStatus(ReviewStatus.PENDING_APPROVAL_FINAL_REPORT);
+        }
+
+        PendingApproval pendingApproval = PendingApproval.builder()
+                .type(reviewState.getCheckpoint() == ReviewCheckpoint.BEFORE_DIAGRAM_APPROVAL
+                        ? ApprovalType.DIAGRAM_CONFIRMATION
+                        : ApprovalType.FINAL_REPORT_APPROVAL)
+                .message(message)
+                .payload(payload)
+                .build();
+
+        reviewState.setPendingApproval(pendingApproval);
+        log.info("Pausing execution at checkpoint={} for human approval", reviewState.getCheckpoint());
+        return AgentRunResult.paused(null);
+    }
+
+
+    /**
+     * Extract diagram payload from the prompt history for human review.
+     * Looks for tool response messages containing diagram extraction results.
+     */
+    private Map<String, Object> buildDiagramPayload(Prompt prompt) {
+        var payload = new LinkedHashMap<String, Object>();
+
+        for (Message message : prompt.getInstructions()) {
+            if (message instanceof ToolResponseMessage toolResponseMessage) {
+                for (var response : toolResponseMessage.getResponses()) {
+                    if (DIAGRAM_EXTRACT.equals(response.name())) {
+                        try {
+                            var data = objectMapper.readValue(response.responseData(),
+                                    new TypeReference<Map<String, Object>>() {
+                                    });
+                            payload.putAll(data);
+                        } catch (JsonProcessingException e) {
+                            log.warn("Failed to parse diagram extraction payload: {}", e.getMessage());
+                        }
+                    }
+                }
+            }
+        }
+
+        if (payload.isEmpty()) {
+            payload.put("status", "diagram extraction pending!");
+        }
+
+        return payload;
     }
 
 }

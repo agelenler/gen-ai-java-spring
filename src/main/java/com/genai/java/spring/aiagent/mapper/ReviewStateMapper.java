@@ -15,6 +15,10 @@ public class ReviewStateMapper {
                 .errorMessage(reviewState.getErrorMessage())
                 .createdAt(reviewState.getCreatedAt())
                 .updatedAt(reviewState.getUpdatedAt())
+                .checkpoint(reviewState.getCheckpoint())
+                .pendingApproval(reviewState.getPendingApproval())
+                .promptHistory(reviewState.getPromptHistory())
+                .approvalHistory(reviewState.getApprovalHistory())
                 .build();
     }
 }

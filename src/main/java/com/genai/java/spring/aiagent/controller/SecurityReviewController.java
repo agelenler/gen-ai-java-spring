@@ -1,5 +1,7 @@
 package com.genai.java.spring.aiagent.controller;
 
+import com.genai.java.spring.aiagent.dto.ApprovalRequest;
+import com.genai.java.spring.aiagent.dto.ApprovalType;
 import com.genai.java.spring.aiagent.dto.FollowUpRequestDto;
 import com.genai.java.spring.aiagent.dto.ReviewDto;
 import com.genai.java.spring.aiagent.dto.ReviewStatus;
@@ -56,4 +58,35 @@ public class SecurityReviewController {
         }
         return securityReviewService.followUpWithVision(id, followUpRequestDto.question());
     }
+
+
+    @PostMapping(path = "/{id}/human-approve-diagram-extract", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, String> humanApproveDiagramExtract(@PathVariable String id,
+                                                          @RequestBody ApprovalRequest approvalRequest) {
+        log.info("Received human approval request for diagram extract with review id {}: approved={}, note={}",
+                id, approvalRequest.approved(), approvalRequest.note());
+
+        securityReviewService.approveWithEdits(id, approvalRequest, ApprovalType.DIAGRAM_CONFIRMATION);
+
+        return Map.of("message", approvalRequest.approved()
+                ? "Diagram extract approved. Resuming review..."
+                : "Diagram extract rejected. Review paused.",
+                "reviewId", id);
+    }
+
+    @PostMapping(path = "/{id}/human-approve-final-report", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, String> humanApproveFinalReport(@PathVariable String id,
+                                                          @RequestBody ApprovalRequest approvalRequest) {
+        log.info("Received human approval request for final report with review id {}: approved={}, note={}",
+                id, approvalRequest.approved(), approvalRequest.note());
+
+        securityReviewService.approveWithEdits(id, approvalRequest, ApprovalType.FINAL_REPORT_APPROVAL);
+
+        return Map.of("message", approvalRequest.approved()
+                        ? "Final report approved. Completing review..."
+                        : "Final report rejected. Review paused.",
+                "reviewId", id);
+    }
+
+
 }

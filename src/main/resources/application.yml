@@ -5,7 +5,7 @@ app:
   ai:
     provider: openai # or openai
   agent:
-    use-chain-workflow: false
+    use-chain-workflow: true
     upload-dir: /Users/Shared/agent-files/uploads
     diagram-tool:
       temperature: 0.2
@@ -161,7 +161,7 @@ spring:
   sql:
     init:
       mode: always
-      data-locations: classpath:/db/data.sql
+      data-locations: classpath:/db/data.sql,classpath:/db/schema.sql
 
 
 logging:
