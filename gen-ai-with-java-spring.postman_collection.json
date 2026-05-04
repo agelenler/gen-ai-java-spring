@@ -1208,6 +1208,66 @@
           "response": []
         },
         {
+          "name": "ai-agent-vision-diagram-security-analysis-diagram-approve",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"approved\": true,\n    \"note\": \"no suggestion\",\n    \"edits\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/security-review/a0e7aa50-3ee1-44b7-b1ec-69736ea23654/human-approve-diagram-extract",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "security-review",
+                "a0e7aa50-3ee1-44b7-b1ec-69736ea23654",
+                "human-approve-diagram-extract"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ai-agent-vision-diagram-security-analysis-final-report-approve",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"approved\": true,\n    \"note\": \"No suggestion\",\n    \"edits\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8081/api/security-review/a0e7aa50-3ee1-44b7-b1ec-69736ea23654/human-approve-final-report",
+              "host": [
+                "localhost"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "security-review",
+                "a0e7aa50-3ee1-44b7-b1ec-69736ea23654",
+                "human-approve-final-report"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "posture-service",
           "request": {
             "method": "POST",
