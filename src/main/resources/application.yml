@@ -5,7 +5,7 @@ app:
   ai:
     provider: openai # or openai
   agent:
-    use-chain-workflow: true
+    use-chain-workflow: false
     upload-dir: /Users/Shared/agent-files/uploads
     diagram-tool:
       temperature: 0.2

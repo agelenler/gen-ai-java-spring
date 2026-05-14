@@ -31,6 +31,7 @@ import org.springframework.ai.model.tool.ToolExecutionResult;
 import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Service
+@ConditionalOnProperty(prefix = "app", name = "agent.use-chain-workflow", havingValue = "false")
 public class SecurityReviewAgentVision implements SecurityReviewAgent {
     private final ToolResponseParser toolResponseParser;
     private final ChatClient chatClient;
