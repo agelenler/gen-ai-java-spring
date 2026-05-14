@@ -192,7 +192,7 @@ management:
     enabled: true
     sampling:
       probability: 1.0
-  otlp:
-    tracing:
-      endpoint: http://localhost:4317
-      transport: GRPC
+#  otlp:
+#    tracing:
+#      endpoint: http://localhost:4317
+#      transport: GRPC
