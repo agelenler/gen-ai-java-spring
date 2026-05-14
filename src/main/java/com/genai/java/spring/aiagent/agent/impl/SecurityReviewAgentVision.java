@@ -4,12 +4,11 @@ import com.genai.java.spring.aiagent.agent.SecurityReviewAgent;
 import com.genai.java.spring.aiagent.agent.records.Plan;
 import com.genai.java.spring.aiagent.agent.util.ToolResponseParser;
 import com.genai.java.spring.aiagent.config.data.AIAgentConfigData;
+import com.genai.java.spring.aiagent.dto.AgentRunResult;
 import com.genai.java.spring.aiagent.dto.ReviewState;
 import com.genai.java.spring.aiagent.mcp.customtoolcallback.PostureCustomToolCallback;
 import com.genai.java.spring.aiagent.tools.diagram.DiagramTools;
 import com.genai.java.spring.aiagent.tools.exception.ToolExecutionException;
-import com.genai.java.spring.aiagent.tools.posture.PostureTools;
-import com.genai.java.spring.aiagent.tools.posture.PostureToolsWithMcpClient;
 import com.genai.java.spring.aiagent.tools.rag.RagTools;
 import com.genai.java.spring.aiagent.tools.web.WebTools;
 import io.micrometer.observation.Observation;
@@ -32,7 +31,6 @@ import org.springframework.ai.model.tool.ToolExecutionResult;
 import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -81,8 +79,8 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
                 .toArray(ToolCallback[]::new);
 
         this.allTools = Stream.concat(
-                Arrays.stream(ToolCallbacks.from(diagramTools, ragTools, webTools)),
-                Arrays.stream(mcpToolsToolCallbacks))
+                        Arrays.stream(ToolCallbacks.from(diagramTools, ragTools, webTools)),
+                        Arrays.stream(mcpToolsToolCallbacks))
                 .toArray(ToolCallback[]::new);
 
         this.followUpTools = Stream.concat(
@@ -92,7 +90,7 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
     }
 
     @Override
-    public String execute(ReviewState reviewState) {
+    public AgentRunResult execute(ReviewState reviewState) {
         //1.) Plan
         var plan = getPlan(reviewState.getFileName(), reviewState.getId());
         log.info("Received following plan from model: {}", plan);
@@ -104,7 +102,7 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
         ChatResponse chatResponse = getChatResponse(reviewState.getId(), prompt);
         prompt = executeToolCalls(reviewState.getId(), chatResponse, prompt, toolCallingChatOptions, MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
         //Ask for the final report
-        return getFinalReport(reviewState.getId(), prompt);
+        return new AgentRunResult(getFinalReport(reviewState.getId(), prompt), false, true);
     }
 
     @Override
