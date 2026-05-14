@@ -1,5 +1,6 @@
 package com.genai.java.spring.aiagent.agent;
 
+import com.genai.java.spring.aiagent.dto.AgentRunResult;
 import com.genai.java.spring.aiagent.dto.ReviewState;
 
 public interface SecurityReviewAgent {
@@ -9,7 +10,7 @@ public interface SecurityReviewAgent {
      * @param reviewState   The uploaded diagram reviewState
      * @return Markdown report (final)
      */
-    String execute(ReviewState reviewState);
+    AgentRunResult execute(ReviewState reviewState);
 
     /** Answer a follow-up question using the same conversation (memory) keyed by reviewId. */
     String followUp(String reviewId, String question);
