@@ -1,9 +1,7 @@
 package com.genai.java.spring.aiagent.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.genai.java.spring.aiagent.agent.SecurityReviewAgent;
 import com.genai.java.spring.aiagent.dataaccess.helper.ReviewStateRepositoryHelper;
-import com.genai.java.spring.aiagent.dataaccess.repository.ReviewStateRepository;
 import com.genai.java.spring.aiagent.dto.AgentRunResult;
 import com.genai.java.spring.aiagent.dto.ApprovalRequest;
 import com.genai.java.spring.aiagent.dto.ApprovalRequestData;
@@ -21,7 +19,6 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -108,10 +105,11 @@ public class SecurityReviewServiceImpl implements SecurityReviewService {
             throw new ResponseStatusException(NOT_FOUND, "Review not found");
         }
 
+        checkStatusForApprovalOrRejection(approvalType, state);
+
         recordApprovalIntoState(id, approvalRequest, approvalType, state);
 
         if (!approvalRequest.approved()) {
-            checkStatusForRejection(approvalType, state);
             // Rejection: save state and mark as rejected
             state.updateStatus(ReviewStatus.REJECTED);
             state.clearPendingApproval();
@@ -190,14 +188,14 @@ public class SecurityReviewServiceImpl implements SecurityReviewService {
         log.info("Recorded approval for reviewId={} type={} approved={}", id, approvalType, approvalRequest.approved());
     }
 
-    private void checkStatusForRejection(ApprovalType approvalType, ReviewState state) {
+    private void checkStatusForApprovalOrRejection(ApprovalType approvalType, ReviewState state) {
         if (approvalType == ApprovalType.DIAGRAM_CONFIRMATION && state.getStatus() != ReviewStatus.PENDING_APPROVAL_DIAGRAM_EXTRACT) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "To reject a diagram review," +
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "To approve or reject a diagram review," +
                     " status must be " + ReviewStatus.PENDING_APPROVAL_DIAGRAM_EXTRACT.name());
         }
 
         if (approvalType == ApprovalType.FINAL_REPORT_APPROVAL && state.getStatus() != ReviewStatus.PENDING_APPROVAL_FINAL_REPORT) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "To reject a final report review," +
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "To approve or reject a final report review," +
                     " status must be " + ReviewStatus.PENDING_APPROVAL_FINAL_REPORT.name());
         }
     }
