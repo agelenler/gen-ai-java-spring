@@ -9,8 +9,8 @@ import com.genai.java.spring.aiagent.dto.ReviewState;
 import com.genai.java.spring.aiagent.mcp.customtoolcallback.PostureCustomToolCallback;
 import com.genai.java.spring.aiagent.tools.diagram.DiagramTools;
 import com.genai.java.spring.aiagent.tools.exception.ToolExecutionException;
-import com.genai.java.spring.aiagent.tools.rag.RagTools;
-import com.genai.java.spring.aiagent.tools.web.WebTools;
+import com.genai.java.spring.aiagent.tools.subagents.rag.RagTools;
+import com.genai.java.spring.aiagent.tools.subagents.websearch.WebSearchTools;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -61,7 +61,7 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
                                      @Qualifier("openAIAgentChatClient") ChatClient chatClient,
                                      DiagramTools diagramTools,
                                      RagTools ragTools,
-                                     WebTools webTools,
+                                     WebSearchTools webSearchTools,
                                      AIAgentConfigData aiAgentConfigData,
                                      SyncMcpToolCallbackProvider mcpTools,
                                      ObservationRegistry registry,
@@ -81,12 +81,12 @@ public class SecurityReviewAgentVision implements SecurityReviewAgent {
                 .toArray(ToolCallback[]::new);
 
         this.allTools = Stream.concat(
-                        Arrays.stream(ToolCallbacks.from(diagramTools, ragTools, webTools)),
+                        Arrays.stream(ToolCallbacks.from(diagramTools, ragTools, webSearchTools)),
                         Arrays.stream(mcpToolsToolCallbacks))
                 .toArray(ToolCallback[]::new);
 
         this.followUpTools = Stream.concat(
-                        Arrays.stream(ToolCallbacks.from(ragTools, webTools)),
+                        Arrays.stream(ToolCallbacks.from(ragTools, webSearchTools)),
                         Arrays.stream(mcpToolsToolCallbacks))
                 .toArray(ToolCallback[]::new);
     }

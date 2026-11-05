@@ -62,6 +62,10 @@ public class AIProviderConfig {
     @Value("${spring.ai.openai.chat.options.model-vision}")
     private String openAIVisionModel;
 
+    @Value("${spring.ai.openai.chat.options.model-subagent}")
+    private String openAISubAgentModel;
+
+
     private static final int MAX_MESSAGES = 5;
 
     @Bean("chatMemoryVectorStore")
@@ -228,6 +232,18 @@ public class AIProviderConfig {
     @Bean("openAIAgentChatClient")
     ChatClient openAIAgentChatClient(OpenAiChatModel openAiChatModel, ChatMemory chatMemory, ContentSanitizerAdvisor contentSanitizerAdvisor) {
         return ChatClient.builder(openAiChatModel)
+                .defaultAdvisors(contentSanitizerAdvisor, MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .build();
+    }
+
+    @Bean("openAIAgentChatClientSubAgent")
+    ChatClient openAIAgentChatClientSubAgent(OpenAiChatModel openAiChatModel,
+                                             ChatMemory chatMemory,
+                                             ContentSanitizerAdvisor contentSanitizerAdvisor) {
+        return ChatClient.builder(openAiChatModel)
+                .defaultOptions(ChatOptions.builder()
+                        .model(openAISubAgentModel)
+                        .build())
                 .defaultAdvisors(contentSanitizerAdvisor, MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .build();
     }

@@ -15,9 +15,9 @@ import com.genai.java.spring.aiagent.dto.ReviewStatus;
 import com.genai.java.spring.aiagent.service.PromptSerializer;
 import com.genai.java.spring.aiagent.tools.diagram.DiagramTools;
 import com.genai.java.spring.aiagent.tools.exception.ToolExecutionException;
+import com.genai.java.spring.aiagent.tools.knowledgeevidence.KnowledgeEvidenceTools;
 import com.genai.java.spring.aiagent.tools.posture.PostureTools;
-import com.genai.java.spring.aiagent.tools.rag.RagTools;
-import com.genai.java.spring.aiagent.tools.web.WebTools;
+import com.genai.java.spring.aiagent.tools.webguidance.WebGuidanceTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -56,8 +56,8 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
     private final ToolCallingManager toolCallingManager;
     private final ToolCallback[] diagramTools;
     private final ToolCallback[] postureTools;
-    private final ToolCallback[] ragTools;
-    private final ToolCallback[] webTools;
+    private final ToolCallback[] knowledgeEvidenceTools;
+    private final ToolCallback[] webGuidanceTools;
     private final ToolCallback[] followUpTools;
     private final PromptSerializer promptSerializer;
     private final ReviewStateRepositoryHelper reviewStateRepositoryHelper;
@@ -69,8 +69,8 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
                                             ObjectMapper objectMapper,
                                             DiagramTools diagramTools,
                                             PostureTools postureTools,
-                                            RagTools ragTools,
-                                            WebTools webTools,
+                                            KnowledgeEvidenceTools knowledgeEvidenceTools,
+                                            WebGuidanceTools webGuidanceTools,
                                             PromptSerializer promptSerializer,
                                             ReviewStateRepositoryHelper reviewStateRepositoryHelper) {
         this.chatClient = chatClient;
@@ -80,10 +80,10 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
         this.toolCallingManager = ToolCallingManager.builder().build();
         this.diagramTools = ToolCallbacks.from(diagramTools);
         this.postureTools = ToolCallbacks.from(postureTools);
-        this.ragTools = ToolCallbacks.from(ragTools);
-        this.webTools = ToolCallbacks.from(webTools);
+        this.knowledgeEvidenceTools = ToolCallbacks.from(knowledgeEvidenceTools);
+        this.webGuidanceTools = ToolCallbacks.from(webGuidanceTools);
         // During follow-up, we usually don’t need diagram_extract again; allow retrieval + posture
-        this.followUpTools = ToolCallbacks.from(postureTools, ragTools, webTools);
+        this.followUpTools = ToolCallbacks.from(postureTools, knowledgeEvidenceTools, webGuidanceTools);
     }
 
     @Override
@@ -104,7 +104,7 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
                     var plan = getPlan(reviewState.getFileName(), reviewState.getId());
                     log.info("Received following plan from model: {}", plan);
                     reviewState.setPlan(plan);
-                    prompt = new Prompt(getMessages(plan));
+                    prompt = new Prompt(getMessages(plan, reviewState.getId()));
                     reviewState.setCheckpoint(ReviewCheckpoint.AFTER_PLAN);
                     setPromptSnapshot(reviewState, prompt);
                     // Continue loop to next checkpoint
@@ -136,7 +136,7 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
 
                 case AFTER_POSTURE -> {
                     // Execute rag group
-                    prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(ragTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+                    prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(knowledgeEvidenceTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
                     reviewState.setCheckpoint(ReviewCheckpoint.AFTER_RAG);
                     setPromptSnapshot(reviewState, prompt);
                     // Continue with WEB execution
@@ -144,7 +144,7 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
 
                 case AFTER_RAG -> {
                     // Execute web group
-                    prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(webTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
+                    prompt = runToolGroup(reviewState.getId(), prompt, getToolCallingChatOptions(webGuidanceTools), MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW);
                     reviewState.setCheckpoint(ReviewCheckpoint.AFTER_WEB);
                     setPromptSnapshot(reviewState, prompt);
                     // Continue with final approval gate
@@ -198,10 +198,10 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
                 Follow this MANDATORY ORDER when planning (no tool calls in this message):
                 1) Extract the diagram structure (diagram_extract).
                 2) Decide which services need posture (internet-facing OR PII OR critical Kafka topics), then fetch posture for those targets (security_posture).
-                3) Retrieve internal policy snippets relevant to the *posture findings* and diagram (rag_query).
-                4) Fetch OWASP/NIST/CWE guidance for the same topics (web_search).
+                3) Retrieve internal policy snippets relevant to the *posture findings* and diagram (knowledge_evidence).
+                4) Fetch OWASP/NIST/CWE guidance for the same topics (web_guidance).
                 5) Synthesize the final report (synthesize).
-                Return ONLY valid JSON matching {"steps":[...]} with toolHint and targets. Do NOT place rag_query or web_search before security_posture.
+                Return ONLY valid JSON matching {"steps":[...]} with toolHint and targets. Do NOT place knowledge_evidence or web_guidance before security_posture.
                 """.formatted(fileName, id));
 
         String system = """
@@ -215,16 +215,16 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
                 2) Determine which services need posture (internet-facing OR handle PII OR participate in critical Kafka topics).
                    Then fetch posture for those services. toolHint=security_posture for each target.
                    Do NOT perform policy retrieval or web search before posture is fetched.
-                3) Retrieve internal policy snippets relevant to the posture findings and diagram (topics like TLS, OAuth2, secrets, Kafka ACLs, data retention). toolHint=rag_query (rag).
-                4) Fetch external guidance (OWASP/NIST/CWE) for the same topics. toolHint=web_search.
+                3) Retrieve internal policy snippets relevant to the posture findings and diagram (topics like TLS, OAuth2, secrets, Kafka ACLs, data retention). toolHint=knowledge_evidence (rag).
+                4) Fetch external guidance (OWASP/NIST/CWE) for the same topics. toolHint=web_guidance.
                 5) Synthesize the final report.
                 
                 Output STRICT JSON ONLY:
                 {"steps":[
                   {"step":1,"goal":"...","toolHint":"diagram_extract","targets":["file:<fileName>"]},
                   {"step":2,"goal":"...","toolHint":"security_posture","targets":["order-service","payment-service","customer-service","restaurant-service","shipment-service"]},
-                  {"step":3,"goal":"...","toolHint":"rag_query","targets":["TLS","OAuth2","Secrets","Kafka Security"]},
-                  {"step":4,"goal":"...","toolHint":"web_search","targets":["TLS","OAuth2","Secrets","Kafka Security"]},
+                  {"step":3,"goal":"...","toolHint":"knowledge_evidence","targets":["TLS","OAuth2","Secrets","Kafka Security"]},
+                  {"step":4,"goal":"...","toolHint":"web_guidance","targets":["TLS","OAuth2","Secrets","Kafka Security"]},
                   {"step":5,"goal":"...","toolHint":"","targets":[]}
                 ]}
                 
@@ -233,11 +233,11 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
                 Rules:
                 - Node types can be one of service|client|database|message_broker|topic|redis
                 - Edge can be from service to service using HTTPS or event-driven with either publisher to kafka-topic or kafka-topic to subscriber
-                - If Kafka (icon or text) is present, create a node: {"id":"kafka","type":"message_broker","labels":["Kafka"]}.
+                - If Kafka (icon or text) is present, create a node: {"reviewId":"kafka","type":"message_broker","labels":["Kafka"]}.
                 - Prefer pub/sub edges over direct HTTP when events are shown.
                 - If unsure but evidence suggests eventing, emit pub/sub edges with source="inferred" (never invent HTTP calls).
-                - Never place rag_query or web_search before security_posture.
-                - Do not omit rag_query or web_search, use both in any case.
+                - Never place knowledge_evidence or web_guidance before security_posture.
+                - Do not omit knowledge_evidence or web_guidance, use both in any case.
                 - Keep steps minimal and executable; prefer 4–5 steps.
                 - Targets is an array of ids or topic hints; "file:<fileName>" for the diagram step.
                 - No prose; JSON only.
@@ -272,17 +272,28 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
 
     }
 
-    private List<Message> getMessages(Plan plan) {
+    private List<Message> getMessages(Plan plan, String reviewId) {
         var messages = new ArrayList<Message>();
         messages.add(new SystemMessage("""
                 You are executing a security review with a strict step budget = %s.
                 Think briefly, call a tool if needed, observe, and continue.
-                Call each tool exactly once in order diagram_extract → security_posture → rag_query → web_search.
+                Call each tool exactly once in order diagram_extract → security_posture → knowledge_evidence → web_guidance.
                 Do NOT skip any tool calls.
+                
+                CRITICAL: Use this review ID for ALL tool invocations:
+                reviewId = "%s"
+                
+                EXECUTION PHASES (in strict order):
+                1. DIAGRAM EXTRACTION: Call diagram_extract tool (must complete first)
+                2. POSTURE CHECK: Call security_posture tool (after diagram)
+                3. INTERNAL POLICIES: Call knowledge_evidence tool (after posture)
+                4. EXTERNAL GUIDANCE: Call web_guidance tool (after knowledge_evidence)
+                5. SYNTHESIS: Generate final report
+                
                 After calling a tool, wait for the observation before proceeding.
                 If it succeeds, DO NOT call it again; proceed to the next phase.
-                Only cite evidence from diagram_extract, security_posture, rag_query and web_search outputs.
-                """.formatted(MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW)));
+                Only cite evidence from diagram_extract, security_posture, knowledge_evidence and web_guidance outputs.
+                """.formatted(MAX_TOOL_CALL_STEPS_DIAGRAM_REVIEW, reviewId)));
 
         // Seed context with the plan so the model knows the roadmap
         messages.add(new UserMessage("Execution plan:\n" + plan));
@@ -391,7 +402,7 @@ public class SecurityReviewAgentChainWorkflow implements SecurityReviewAgent {
         messages.add(new SystemMessage("""
                 You are answering a follow-up about the SAME architecture review as before.
                 Use conversation memory for prior diagram extraction, posture results, and retrievals.
-                If new evidence is required, you may call rag_query, web_search (allowlisted), or security_posture.
+                If new evidence is required, you may call knowledge_evidence, web_guidance (allowlisted), or security_posture.
                 Keep answers concise and grounded; include citations/links when applicable.
                 """));
         messages.add(new UserMessage(question));

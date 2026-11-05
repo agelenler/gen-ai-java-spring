@@ -1,4 +1,4 @@
-package com.genai.java.spring.aiagent.tools.web;
+package com.genai.java.spring.aiagent.tools.subagents.websearch;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import org.springframework.stereotype.Component;

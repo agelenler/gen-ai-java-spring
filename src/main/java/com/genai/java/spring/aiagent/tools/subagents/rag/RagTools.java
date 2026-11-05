@@ -1,7 +1,7 @@
-package com.genai.java.spring.aiagent.tools.rag;
+package com.genai.java.spring.aiagent.tools.subagents.rag;
 
 import com.genai.java.spring.aiagent.config.data.AIAgentConfigData;
-import com.genai.java.spring.aiagent.tools.rag.records.RagArgs;
+import com.genai.java.spring.aiagent.tools.subagents.rag.records.RagArgs;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;

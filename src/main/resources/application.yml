@@ -107,6 +107,7 @@ spring:
         options:
           model: gpt-4o-mini  # gpt-4o # gpt-5.2 # gpt-3.5-turbo # ai/gemma3 # mistral:7b # Qwen/Qwen2.5-Coder-7B-Instruct
           model-vision: gpt-4.1-mini
+          model-subagent: gpt-4o-mini
 #      embedding:
 #        options:
 #          model: ai/mxbai-embed-large

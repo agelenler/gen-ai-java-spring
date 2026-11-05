@@ -1,8 +1,8 @@
-package com.genai.java.spring.aiagent.tools.web;
+package com.genai.java.spring.aiagent.tools.subagents.websearch;
 
 import com.genai.java.spring.aiagent.config.data.AIAgentConfigData;
-import com.genai.java.spring.aiagent.tools.web.records.WebArgs;
-import com.genai.java.spring.aiagent.tools.web.records.WebItem;
+import com.genai.java.spring.aiagent.tools.subagents.websearch.records.WebArgs;
+import com.genai.java.spring.aiagent.tools.subagents.websearch.records.WebItem;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,14 +23,14 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @Component
-public class WebTools {
+public class WebSearchTools {
 
     private final WebClient webClient;
     private final GcpTokenProvider gcpTokenProvider;
     private final AIAgentConfigData.WebToolProperties webToolProperties;
     private final ObservationRegistry registry;
 
-    public WebTools(WebClient.Builder builder, GcpTokenProvider gcpTokenProvider, AIAgentConfigData aiAgentConfigData, ObservationRegistry registry) {
+    public WebSearchTools(WebClient.Builder builder, GcpTokenProvider gcpTokenProvider, AIAgentConfigData aiAgentConfigData, ObservationRegistry registry) {
         this.registry = registry;
         this.webClient = builder.baseUrl(aiAgentConfigData.getWebTool().getGoogleVertexSearch().getEndpointBaseUrl()).build();
         this.gcpTokenProvider = gcpTokenProvider;
