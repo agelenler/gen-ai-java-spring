@@ -6,8 +6,7 @@ public enum ReviewCheckpoint {
     BEFORE_DIAGRAM_APPROVAL,  // gate point
     AFTER_DIAGRAM,
     AFTER_POSTURE,
-    AFTER_RAG,
-    AFTER_WEB,
+    AFTER_ASYNC_EVIDENCES,
     BEFORE_FINAL_APPROVAL, // gate point
     DONE
 }
